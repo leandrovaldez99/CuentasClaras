@@ -1514,9 +1514,11 @@ button.caldia:hover{border-color:var(--line-strong)}
 /* v289: gastos fijos */
 .tile.fqueda{display:block;height:auto;margin-bottom:14px}
 .cuenta3{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin-top:10px;font-size:13px;color:var(--ink-2)}
-.cuenta3 span:nth-child(even){font-family:var(--f-mono);text-align:right;white-space:nowrap}
+.cuenta3 .v{font-family:var(--f-mono);text-align:right;white-space:nowrap}
 .cuenta3 .neg{color:var(--out)}
 .cuenta3 .tot{border-top:1px solid var(--line);padding-top:6px;margin-top:2px;font-weight:600;color:var(--ink)}
+.cuenta3 .v.tot{font-family:var(--f-mono)}
+.cuenta3 .det{grid-column:1/-1;font-size:12px;color:var(--ink-3);margin:-2px 0 4px;line-height:1.35}
 .tuparte{display:flex;align-items:baseline;gap:2px 8px;margin:4px 0 2px;flex-wrap:wrap}
 .tuparte b{white-space:nowrap;font-family:var(--f-mono);font-size:19px;color:var(--out);font-weight:500}
 .tuparte small{font-size:12.5px;color:var(--ink-3)}
@@ -2554,7 +2556,7 @@ html{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100
         </div>
         <!-- v243: la versión, chiquita, al final de Ajustes. v244: es la de leandro
              (la misma que el versionName de la APK). SUBIRLA CON CADA APK/DEPLOY. -->
-        <p class="app-ver" id="appVer">Cuentas Claras · versión 1.11.1 · 08/11/2026</p>
+        <p class="app-ver" id="appVer">Cuentas Claras · versión 1.12 · 08/11/2026</p>
       </section>
 
       <!-- ============ HERRAMIENTAS ============ -->
@@ -3524,8 +3526,99 @@ var espacio = { chars:0, fallo:false, oculto:false };
    exportadas, los respaldos y la copia en la nube. La clave de sincronización y
    la llave de este dispositivo no viajan en ningún archivo. */
 function sinSy(){ var o = {}; Object.keys(S).forEach(function(k){ if(k !== 'sy') o[k] = S[k]; }); return o; }
+/* ---- v292: los medios de pago tienen id ----
+   En lo que se guarda (el navegador, el archivo del teléfono, la copia que
+   exportás) cada medio es { id, nombre, dia } y todo lo que lo usa (movimientos,
+   cuotas, fijos, pases, cuentas que rinden, lo que se pagaron en el grupo, la
+   parte de un viaje) guarda su id. Dos medios pueden tener cualquier nombre sin
+   que se mezclen, y cambiarle el nombre a uno no toca nada más que el medio.
+   Mientras la app está abierta trabaja con el nombre: al abrir, cada id se cambia
+   por su nombre (como un JOIN) y al guardar se vuelve a escribir el id. Así los
+   celulares del grupo que todavía tienen una versión anterior se siguen
+   entendiendo con éste (entre ellos se mandan los nombres, como siempre).
+   El id de cada nombre vive en S._medId, que no se guarda ni se sincroniza tal
+   cual: viaja adentro de la lista de medios. */
+function medReg(o){
+  o = o || S;
+  if(!o._medId) Object.defineProperty(o, '_medId', { value:{}, writable:true, configurable:true, enumerable:false });
+  return o._medId;
+}
+function paraGuardar(src){
+  var reg = medReg(S), lista = Array.isArray(src.medios) ? src.medios : [];
+  // sólo los medios de la lista llevan id; un nombre suelto que no está (datos viejos) queda como nombre
+  var id = function(n){
+    if(typeof n !== 'string' || !n || lista.indexOf(n) < 0) return n;
+    if(!reg[n]) reg[n] = 'md' + uid();
+    return reg[n];
+  };
+  var sal = function(x){
+    var y = {}; Object.keys(x).forEach(function(k){ y[k] = x[k]; });
+    if(typeof y.medio === 'string') y.medio = id(y.medio);
+    if(y.sal && typeof y.sal === 'object'){
+      var r = {}; Object.keys(y.sal).forEach(function(k){ var v = y.sal[k]; r[k] = (v && typeof v === 'object') ? { t:v.t, de:id(v.de), a:id(v.a) } : v; });
+      y.sal = r;
+    }
+    return y;
+  };
+  var o = {}; Object.keys(src).forEach(function(k){ o[k] = src[k]; });
+  var dia = (src.diaMedio && typeof src.diaMedio === 'object') ? src.diaMedio : {};
+  o.medios = lista.map(function(n){ var m = { id:id(n), nombre:n }; if(dia[n] >= 1) m.dia = dia[n]; return m; });
+  var resto = {}, hayResto = false;
+  Object.keys(dia).forEach(function(k){ if(lista.indexOf(k) < 0){ resto[k] = dia[k]; hayResto = true; } });
+  if(hayResto) o.diaMedio = resto; else delete o.diaMedio;
+  ['tx', 'planes', 'fijos'].forEach(function(k){ if(Array.isArray(src[k])) o[k] = src[k].map(function(x){ return (x && typeof x === 'object') ? sal(x) : x; }); });
+  if(Array.isArray(src.pases)) o.pases = src.pases.map(function(p){ var y = {}; Object.keys(p).forEach(function(k){ y[k] = p[k]; }); y.de = id(p.de); y.a = id(p.a); return y; });
+  if(Array.isArray(src.cuentas)) o.cuentas = src.cuentas.map(function(c){ var y = {}; Object.keys(c).forEach(function(k){ y[k] = c[k]; }); if(c.medio) y.medio = id(c.medio); return y; });
+  if(Array.isArray(src.viajes)) o.viajes = src.viajes.map(function(v){
+    if(!v || !v.cargado || !v.cargado.medio) return v;
+    var y = {}; Object.keys(v).forEach(function(k){ y[k] = v[k]; });
+    y.cargado = { monto:v.cargado.monto, fecha:v.cargado.fecha, medio:id(v.cargado.medio) };
+    return y;
+  });
+  return o;
+}
+// lo inverso, al abrir: cada id vuelve a ser su nombre. Datos viejos (medios como nombres) pasan sin tocar.
+function desdeGuardado(o){
+  if(!o || typeof o !== 'object' || !Array.isArray(o.medios) || !o.medios.some(function(m){ return m && typeof m === 'object'; })) return { o:o, reg:{} };
+  var porId = {}, reg = {}, dia = {}, nombres = [];
+  o.medios.forEach(function(m){
+    var n = typeof m === 'string' ? m : (m && typeof m.nombre === 'string' ? m.nombre : '');
+    n = n.trim().replace(/\s+/g, ' ').slice(0, 28);
+    if(!n || nombres.indexOf(n) > -1) return;
+    nombres.push(n);
+    if(m && typeof m === 'object'){
+      if(typeof m.id === 'string' && m.id){ porId[m.id] = n; reg[n] = m.id.slice(0, 24); }
+      var d = parseInt(m.dia, 10); if(d >= 1 && d <= 31) dia[n] = d;
+    }
+  });
+  var nom = function(v){ return (typeof v === 'string' && Object.prototype.hasOwnProperty.call(porId, v)) ? porId[v] : v; };
+  var sal = function(x){
+    var y = {}; Object.keys(x).forEach(function(k){ y[k] = x[k]; });
+    if(typeof y.medio === 'string') y.medio = nom(y.medio);
+    if(y.sal && typeof y.sal === 'object'){
+      var r = {}; Object.keys(y.sal).forEach(function(k){ var v = y.sal[k]; r[k] = (v && typeof v === 'object') ? { t:v.t, de:nom(v.de), a:nom(v.a) } : v; });
+      y.sal = r;
+    }
+    return y;
+  };
+  var c = {}; Object.keys(o).forEach(function(k){ c[k] = o[k]; });
+  c.medios = nombres;
+  ['tx', 'planes', 'fijos'].forEach(function(k){ if(Array.isArray(o[k])) c[k] = o[k].map(function(x){ return (x && typeof x === 'object') ? sal(x) : x; }); });
+  if(Array.isArray(o.pases)) c.pases = o.pases.map(function(p){ if(!p || typeof p !== 'object') return p; var y = {}; Object.keys(p).forEach(function(k){ y[k] = p[k]; }); y.de = nom(p.de); y.a = nom(p.a); return y; });
+  if(Array.isArray(o.cuentas)) c.cuentas = o.cuentas.map(function(x){ if(!x || typeof x !== 'object') return x; var y = {}; Object.keys(x).forEach(function(k){ y[k] = x[k]; }); y.medio = nom(x.medio); return y; });
+  if(Array.isArray(o.viajes)) c.viajes = o.viajes.map(function(v){
+    if(!v || !v.cargado || !v.cargado.medio) return v;
+    var y = {}; Object.keys(v).forEach(function(k){ y[k] = v[k]; });
+    y.cargado = { monto:v.cargado.monto, fecha:v.cargado.fecha, medio:nom(v.cargado.medio) };
+    return y;
+  });
+  var dm = {}; Object.keys(dia).forEach(function(k){ dm[k] = dia[k]; });
+  if(o.diaMedio && typeof o.diaMedio === 'object') Object.keys(o.diaMedio).forEach(function(k){ dm[nom(k)] = o.diaMedio[k]; });
+  c.diaMedio = dm;
+  return { o:c, reg:reg };
+}
 function writeLocal(){
-  var a = AND(), js = JSON.stringify(S);
+  var a = AND(), js = JSON.stringify(paraGuardar(S));
   espacio.chars = js.length;
   if(a){ try{ a.guardar(js); }catch(e){} pintarEspacio(); return; }
   try{ localStorage.setItem(LS, js); espacio.fallo = false; }
@@ -3563,6 +3656,8 @@ function pintarEspacio(){
 function normalize(o){
   var s = emptyState();
   if(!o || typeof o !== 'object') return s;
+  var dg = desdeGuardado(o); o = dg.o;              // v292: los medios guardados por id
+  Object.defineProperty(s, '_medId', { value:dg.reg, writable:true, configurable:true, enumerable:false });
   s.updatedAt = Number(o.updatedAt)||0;
   s.tx = Array.isArray(o.tx)? o.tx.filter(function(t){return t && t.id;}) : [];
   s.tx.forEach(function(t){
@@ -4075,7 +4170,7 @@ function flush(){
   if(!cloud || modo!=='nube') return;
   if(saving){ pending = true; return; }
   saving = true;
-  var files = {}; files[DATA_PATH] = JSON.stringify(sinSy());
+  var files = {}; files[DATA_PATH] = JSON.stringify(paraGuardar(sinSy()));
   cloud.publish(files).then(function(){
     saving = false;
     if(pending){ pending = false; flush(); }
@@ -4090,8 +4185,11 @@ function flush(){
 }
 
 function initStore(){
-  var local = normalize(readLocal());
+  var crudo = readLocal();
+  var local = normalize(crudo);
   S = local;
+  // v292: datos de antes, con los medios por nombre: se guardan ya con ids
+  if(crudo && Array.isArray(crudo.medios) && crudo.medios.some(function(m){ return typeof m === 'string'; })) writeLocal();
   fillSelects();
   render();
   aplicarOrden();
@@ -4100,7 +4198,7 @@ function initStore(){
     // En el APK los datos viven en un archivo JSON de la app: no hay nube que consultar.
     cloudReady = true; modo = 'archivo';
     renderAjustes();
-    try{ AND().copiaAutomatica(JSON.stringify(sinSy())); }catch(e){}
+    try{ AND().copiaAutomatica(JSON.stringify(paraGuardar(sinSy()))); }catch(e){}
     traerDolar();
     traerTasas();
     traerFeriados();
@@ -6182,30 +6280,53 @@ function renderPagos(){
       + '</div>';
   }).join('');
 }
-/* v289: "Te queda después de los fijos": lo que entra en el mes (lo cargado más
-   los ingresos fijos, hayan llegado o no) menos los gastos fijos del mes, partidos
-   en los ya pagados y los que faltan. Con alguien elegido arriba, es su cuenta y
-   con su parte de los gastos a medias; con "Todos", la de la casa. */
+/* v293: "Te queda después de los fijos": la plata que tenés HOY (el saldo de
+   todos tus medios de pago, como en "Saldo por medio") menos los gastos fijos
+   del mes que todavía no se pagaron. Los que ya se pagaron ya salieron de ese
+   saldo, por eso no se vuelven a restar. Con alguien elegido arriba, es su plata
+   y su parte de los gastos a medias; con "Todos", la de la casa. Como es "hoy",
+   sólo se muestra mirando el mes actual. */
 function pintarQueda(delMes, esIng){
   var box = $('#fQueda'); if(!box) return;
-  if(esIng || !delMes.length){ box.hidden = true; return; }
-  var entra = 0;
-  txDe(mes).forEach(function(t){ if(t.tipo === 'ingreso') entra += montoPesos(t); });
-  fijosDe(mes, 'ingreso', false, pesoParte).forEach(function(x){ entra += x.monto; });
-  var pag = 0, falta = 0;
-  delMes.forEach(function(x){ if(x.pago) pag += x.monto; else falta += x.monto; });
-  var queda = entra - pag - falta, v = verDe();
+  if(esIng || !delMes.length || mes !== ymNow()){ box.hidden = true; return; }
+  var tengo = 0, conPlata = [];
+  saldosPorMedio(mes).forEach(function(f){
+    if(!f.usa) return;
+    tengo += f.saldo;
+    if(Math.abs(f.saldo) >= 0.5) conPlata.push(f);
+  });
+  /* De lo que falta pagar cuenta tu parte: en un fijo a medias, la del otro te
+     la devuelve (pedido de leandro). Por lo mismo se suma lo que el grupo te
+     tiene que devolver y se resta lo que vos tenés que devolver (Pendientes). */
+  var pag = 0, falta = 0, nFalta = 0, hayMedias = false;
+  fijosDe(mes, 'gasto', false, pesoParte).forEach(function(x){
+    if(x.pago){ pag += x.monto; return; }
+    falta += x.monto; nFalta++;
+    if(verDe() && esMedias(x.fijo, mes)) hayMedias = true;   // con "Todos" va entero: es la plata de la casa
+  });
+  var v = verDe(), yo = (!v || v === miPersona());
+  // lo pendiente del grupo es de quien usa este celular: se cuenta mirándose a sí mismo
+  var deben = 0;
+  if(v && v === miPersona()) pendPorPersona().forEach(function(g){ deben -= g.neto; });
+  deben = Math.round(deben * 100) / 100;
+  var queda = tengo + deben - falta;
   box.hidden = false;
-  $('#fQuedaLab').textContent = (!v || v === miPersona()) ? 'Te queda después de los fijos' : 'A ' + nombrePersona(v) + ' le queda después de los fijos';
+  $('#fQuedaLab').textContent = yo ? 'Te queda después de los fijos' : 'A ' + nombrePersona(v) + ' le queda después de los fijos';
   var n = $('#fQuedaNum');
   n.textContent = (queda < 0 ? '− ' : '') + money(Math.abs(queda));
   n.style.color = queda < 0 ? 'var(--out)' : 'var(--in)';
   var nomMes = MESES[parseInt(mes.slice(5, 7), 10) - 1];
-  $('#fQuedaCta').innerHTML = '<span>Entra en ' + esc(nomMes) + '</span><span>' + esc(money(entra)) + '</span>'
-    + '<span>Fijos ya pagados</span><span class="neg">− ' + esc(money(pag)) + '</span>'
-    + '<span>Fijos por pagar</span><span class="neg">− ' + esc(money(falta)) + '</span>'
-    + '<span class="tot">Te queda</span><span class="tot">' + esc((queda < 0 ? '− ' : '') + money(Math.abs(queda))) + '</span>'
-    + (entra > 0 ? '' : '<span style="grid-column:1/-1;color:var(--ink-3);font-size:12.5px">Todavía no hay ingresos en ' + esc(nomMes) + ': cargá el sueldo o un ingreso fijo.</span>');
+  var firma = function(x){ return (x < 0 ? '− ' : '') + money(Math.abs(x)); };
+  conPlata.sort(function(a, b){ return b.saldo - a.saldo; });
+  $('#fQuedaCta').innerHTML = '<span>' + (yo ? 'Tenés hoy' : 'Tiene hoy') + '</span><span class="v">' + esc(firma(tengo)) + '</span>'
+    + (conPlata.length ? '<span class="det">' + conPlata.map(function(f){ return esc(f.medio) + ' ' + esc(firma(f.saldo)); }).join(' · ') + '</span>' : '')
+    + (deben > 0 ? '<span>Te tienen que devolver</span><span class="v">+ ' + esc(money(deben)) + '</span>' : '')
+    + (deben < 0 ? '<span>Tenés que devolver</span><span class="v neg">− ' + esc(money(-deben)) + '</span>' : '')
+    + '<span>Fijos que faltan pagar' + (nFalta ? ' (' + nFalta + ')' : '') + '</span><span class="v neg">− ' + esc(money(falta)) + '</span>'
+    + '<span class="tot">' + (yo ? 'Te queda' : 'Le queda') + '</span><span class="v tot">' + esc(firma(queda)) + '</span>'
+    + (hayMedias ? '<span class="det">De los fijos a medias cuenta sólo ' + (yo ? 'tu' : 'su') + ' parte: la otra ' + (yo ? 'te' : 'le') + ' la devuelven.</span>' : '')
+    + (deben ? '<span class="det">' + (deben > 0 ? 'Lo que te deben' : 'Lo que debés') + ' sale de Pendientes del grupo, en Movimientos.</span>' : '')
+    + '<span class="det">' + (pag > 0 ? 'Los fijos de ' + esc(nomMes) + ' que ya se pagaron ya están descontados de lo que ' + (yo ? 'tenés' : 'tiene') + '.' : 'Todavía no se pagó ningún fijo de ' + esc(nomMes) + '.') + '</span>';
 }
 /* ---- v289: editar un fijo entero ----
    El lápiz carga el fijo en el formulario de arriba. Al guardar se elige desde
@@ -7744,6 +7865,19 @@ function desmarcarMedioQuitado(nombre){
   var i = S.mediosQuitados.indexOf(nombre);
   if(i > -1) S.mediosQuitados.splice(i, 1);
 }
+/* v292: lo que antes se olvidaba al renombrar o borrar un medio: el día de las
+   cuotas de esa tarjeta, lo que se pagaron en el grupo (de qué medio salió y a
+   cuál entró) y la parte de un viaje que cargaste como gasto. */
+function medioCambiarEnResto(viejo, nuevo){
+  if(S.diaMedio && S.diaMedio[viejo]){ if(nuevo && !S.diaMedio[nuevo]) S.diaMedio[nuevo] = S.diaMedio[viejo]; delete S.diaMedio[viejo]; }
+  [S.tx, S.planes, S.fijos].forEach(function(l){
+    (l || []).forEach(function(x){
+      if(!x || !x.sal) return;
+      Object.keys(x.sal).forEach(function(k){ var v = x.sal[k]; if(!v) return; if(v.de === viejo) v.de = nuevo; if(v.a === viejo) v.a = nuevo; });
+    });
+  });
+  (S.viajes || []).forEach(function(v){ if(v && v.cargado && v.cargado.medio === viejo) v.cargado.medio = nuevo; });
+}
 function renombrarMedio(i, nuevo){
   var viejo = S.medios[i];
   if(viejo === nuevo) return;
@@ -7754,6 +7888,9 @@ function renombrarMedio(i, nuevo){
   (S.pases||[]).forEach(function(p){ if(p.de === viejo) p.de = nuevo; if(p.a === viejo) p.a = nuevo; });
   // la cuenta que rinde con ese medio se llama igual: que lo siga
   cuentas().forEach(function(c){ if(c.medio === viejo) c.medio = nuevo; });
+  medioCambiarEnResto(viejo, nuevo);
+  // v292: el id es el mismo: sólo cambia el nombre
+  var reg = medReg(); if(reg[viejo]){ reg[nuevo] = reg[viejo]; delete reg[viejo]; }
   marcarMedioQuitado(viejo);
   desmarcarMedioQuitado(nuevo);
 }
@@ -7774,6 +7911,8 @@ function borrarMedio(i){
   });
   // un pase que quedó de un medio al mismo medio no mueve nada
   S.pases = (S.pases||[]).filter(function(p){ return p.de !== p.a; });
+  medioCambiarEnResto(nombre, destino);
+  delete medReg()[nombre];
   marcarMedioQuitado(nombre);
   return movidos ? ('Borré "'+nombre+'" y pasé '+movidos+(movidos===1?' movimiento':' movimientos')+' a "'+destino+'"')
                  : ('Borré "'+nombre+'"');
@@ -12234,7 +12373,7 @@ function dvNombre(){
 
 /* ---- la copia de antes de vincular ---- */
 function dvRespaldar(){
-  var txt = JSON.stringify(sinSy()), ok = false;
+  var txt = JSON.stringify(paraGuardar(sinSy())), ok = false;
   try{ localStorage.setItem(DV_ANTES, txt); ok = localStorage.getItem(DV_ANTES) === txt; }catch(e){}
   if(AND()){
     // en el teléfono queda además un archivo en Descargas
@@ -13100,7 +13239,7 @@ function dvJuntar(it){
     .sort(function(a, b){ return dvOrden(a) - dvOrden(b); });
   // antes de un borrado grande, una copia (por si algo salió mal en el otro lado)
   claves.forEach(function(k){ var r = it[k], mio = h[k]; if(r[1] === null && Number(r[0]) > (mio ? mio[1] : 0) && dvLocal(k) !== undefined) borrar.push(k); });
-  if(borrar.length > 10){ try{ localStorage.setItem(DV_RESP, JSON.stringify(sinSy())); }catch(e){} }
+  if(borrar.length > 10){ try{ localStorage.setItem(DV_RESP, JSON.stringify(paraGuardar(sinSy()))); }catch(e){} }
   claves.forEach(function(k){
     var t = Number(it[k][0]), val = it[k][1], mio = h[k], lt = mio ? mio[1] : 0;
     // las personas del grupo no se pisan: se juntan las de los dos lados
@@ -16309,7 +16448,7 @@ function wipeTxt(b, armado){
 
 /* export / import */
 function exportar(){
-  var data = JSON.stringify(sinSy(), null, 2);
+  var data = JSON.stringify(paraGuardar(sinSy()), null, 2);
   var name = 'cuentas-claras-'+today()+'.json';
   if(AND()){
     var msg = '';
