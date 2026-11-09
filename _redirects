@@ -1,0 +1,6 @@
+# Por si Netlify Drop no sube la carpeta oculta .well-known
+/.well-known/assetlinks.json  /assetlinks.json  200
+
+# v290: comparatasas saco su _payload.json; ahora los datos vienen en la pagina principal.
+# v288: comparatasas no deja que una pagina web lea su archivo (CORS). Pedido desde este mismo sitio, Netlify lo trae y no hay bloqueo.
+/tasas  https://comparatasas.ar/  200

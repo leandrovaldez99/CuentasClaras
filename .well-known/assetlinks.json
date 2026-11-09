@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ar.cuentasclaras.app",
+      "sha256_cert_fingerprints": [
+        "87:20:2C:E2:6A:AC:FD:AC:8A:2E:65:F0:A1:19:8C:48:F8:34:E8:F4:02:70:E9:28:70:B0:5A:90:2E:F5:A9:F4"
+      ]
+    }
+  }
+]
