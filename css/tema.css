@@ -1,0 +1,173 @@
+/* Cuentas Claras · css/tema.css
+   Colores, tipografías y el fondo: las variables de las que cuelga todo el diseño (tema claro y oscuro). */
+
+/* ---------- tokens ---------- */
+:root{
+  --ground:#F2F6FB; --surface:#FFFFFF; --surface-2:#E9F0F8;
+  --ink:#0B1D3F; --ink-2:#4E5D78; --ink-3:#8391A9; --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238391A9' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  --line:#E0E7F0; --line-strong:#C8D3E2; --fab-gris:#5C6982; --fab-verde:#00897A;
+  --in:#00897A; --out:#BE3B33; --cuota:#8A6A2F; --meta:#3A5C93; --warn:#B07A16;
+  --in-soft:#DBEEEA; --out-soft:#F8E2E0; --cuota-soft:#F3EAD7; --meta-soft:#E0E8F4;
+  /* v233: los colores del logo. `--acc` es el de la interfaz (sección elegida,
+     interruptores, foco, chips); `--btn` el de los botones principales y el +:
+     azul marino en claro, celeste en oscuro. El verde y el rojo quedan sólo para
+     la plata que entra y la que sale. */
+  --acc:#2A78C4; --acc-soft:#E0EEFB; --btn:#0B1D3F; --btn-ink:#FFFFFF; --fab:#0B1D3F; --fab-ink:#FFFFFF; --marca:#0B1D3F; --marca-borde:rgba(255,255,255,.08);
+  --hoy-luz:rgba(11,29,63,.34); --hoy-luz-2:rgba(11,29,63,.18);
+  --shadow:0 1px 2px rgba(11,29,63,.05), 0 14px 30px -20px rgba(11,29,63,.40);
+  --r:18px; --ctl:40px;
+  /* En claro el vidrio tiene que ser MÁS transparente que en oscuro, no menos.
+     Es al revés de lo que uno espera: en oscuro, un velo blanco sobre negro se
+     nota solo; en claro, un velo blanco sobre un fondo casi blanco no tiene
+     contra qué refractar y termina viéndose como una tarjeta opaca de toda la
+     vida. Por eso acá el relleno baja a poco más de la mitad y el fondo de la
+     app se pintó más oscuro y con más color: lo que se ve a través del vidrio
+     es lo que hace que parezca vidrio. */
+  --vidrio:linear-gradient(135deg,rgba(255,255,255,.60),rgba(255,255,255,0) 46%),linear-gradient(150deg,rgba(255,255,255,.60),rgba(255,255,255,.30));
+  --vidrio-2:linear-gradient(150deg,rgba(255,255,255,.46),rgba(255,255,255,.22));
+  --vidrio-borde:rgba(255,255,255,.85);
+  --vidrio-luz:0 0 0 1px rgba(11,29,63,.06),0 2px 8px rgba(11,29,63,.06),0 22px 40px -22px rgba(11,29,63,.50),inset 0 1px 0 rgba(255,255,255,1),inset 0 -1px 0 rgba(11,29,63,.05);
+  --hueco:rgba(11,29,63,.055); --hueco-borde:rgba(11,29,63,.15); --hueco-fuerte:rgba(11,29,63,.32);
+  /* Los globitos (calendario, paleta, desplegable) tapan contenido cualquiera:
+     necesitan bastante más cuerpo que una tarjeta o abajo se lee el formulario. */
+  --vidrio-pop:linear-gradient(135deg,rgba(255,255,255,.62),rgba(255,255,255,0) 44%),linear-gradient(150deg,rgba(255,255,255,.93),rgba(244,248,253,.88));
+  --vidrio-blur:blur(22px) saturate(185%);
+  --vidrio-barra:rgba(244,248,253,.66);
+  --brillo:rgba(255,255,255,.65);
+  /* el tinte de cada recuadro de montos: un resplandor de su color en la esquina */
+  --t-in:rgba(0,137,122,.17); --t-out:rgba(190,59,51,.14); --t-meta:rgba(58,92,147,.15); --t-bal:rgba(11,29,63,.07);
+  --hilo:rgba(11,29,63,.08);
+  --tico-luz:linear-gradient(150deg,rgba(255,255,255,.55),rgba(255,255,255,.12));
+  --luz-1:#74ACDF; --luz-2:#3E82D0; --luz-3:#E9B949; --luz-op:.34;
+
+  --f-disp:"Fraunces",Georgia,"Times New Roman",serif;
+  --f-body:"Instrument Sans","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#02060F; --surface:#0A1222; --surface-2:#111C31;
+    --ink:#F1F5FB; --ink-2:#A9B6CD; --ink-3:#7686A3; --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237686A3' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    --line:#18233A; --line-strong:#26344F; --fab-gris:#74829E; --fab-verde:#1F9C88;
+    --in:#2AA893; --out:#E0685E; --cuota:#C9A15A; --meta:#7FA3D6; --warn:#DFAE4E;
+    --in-soft:#0B2626; --out-soft:#3A2321; --cuota-soft:#332C1B; --meta-soft:#121F38;
+  --acc:#74ACDF; --acc-soft:#10233F; --btn:#74ACDF; --btn-ink:#0B1D3F; /* v236: el + de la barra, blanco en oscuro */ --fab:#F1F5FB; --fab-ink:#0B1D3F; --marca:#0B1D3F; --marca-borde:rgba(116,172,223,.40);
+    --hoy-luz:rgba(241,245,251,.42); --hoy-luz-2:rgba(241,245,251,.20);
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 14px 30px -20px rgba(0,0,0,.92);
+    --vidrio:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,0) 44%),linear-gradient(150deg,rgba(255,255,255,.075),rgba(255,255,255,.025));
+    --vidrio-2:linear-gradient(150deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+    --vidrio-borde:rgba(255,255,255,.13);
+    --hueco:rgba(0,0,0,.38); --hueco-borde:rgba(255,255,255,.12); --hueco-fuerte:rgba(255,255,255,.28);
+    --vidrio-pop:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,0) 44%),linear-gradient(150deg,rgba(15,25,45,.96),rgba(9,16,32,.94));
+    --vidrio-luz:0 10px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.16);
+    --vidrio-blur:blur(20px) saturate(140%);
+    --vidrio-barra:rgba(2,6,15,.76);
+    --brillo:rgba(255,255,255,.07);
+    --t-in:rgba(42,168,147,.22); --t-out:rgba(224,104,94,.19); --t-meta:rgba(127,163,214,.19); --t-bal:rgba(255,255,255,.07);
+    --hilo:rgba(255,255,255,.08);
+    --tico-luz:linear-gradient(150deg,rgba(255,255,255,.10),rgba(255,255,255,.02));
+    --luz-1:#2A68B0; --luz-2:#3F7FC4; --luz-3:#9A6E28; --luz-op:.17;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#02060F; --surface:#0A1222; --surface-2:#111C31;
+  --ink:#F1F5FB; --ink-2:#A9B6CD; --ink-3:#7686A3; --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237686A3' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  --line:#18233A; --line-strong:#26344F; --fab-gris:#74829E; --fab-verde:#1F9C88;
+  --in:#2AA893; --out:#E0685E; --cuota:#C9A15A; --meta:#7FA3D6; --warn:#DFAE4E;
+  --in-soft:#0B2626; --out-soft:#3A2321; --cuota-soft:#332C1B; --meta-soft:#121F38;
+  --acc:#74ACDF; --acc-soft:#10233F; --btn:#74ACDF; --btn-ink:#0B1D3F; /* v236: el + de la barra, blanco en oscuro */ --fab:#F1F5FB; --fab-ink:#0B1D3F; --marca:#0B1D3F; --marca-borde:rgba(116,172,223,.40);
+  --hoy-luz:rgba(241,245,251,.42); --hoy-luz-2:rgba(241,245,251,.20);
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 14px 30px -20px rgba(0,0,0,.92);
+  --vidrio:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,0) 44%),linear-gradient(150deg,rgba(255,255,255,.075),rgba(255,255,255,.025));
+  --vidrio-2:linear-gradient(150deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+  --vidrio-borde:rgba(255,255,255,.13);
+  --hueco:rgba(0,0,0,.38); --hueco-borde:rgba(255,255,255,.12); --hueco-fuerte:rgba(255,255,255,.28);
+  --vidrio-pop:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,0) 44%),linear-gradient(150deg,rgba(15,25,45,.96),rgba(9,16,32,.94));
+  --vidrio-luz:0 10px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.16);
+  --vidrio-blur:blur(20px) saturate(140%);
+  --vidrio-barra:rgba(2,6,15,.76);
+  --brillo:rgba(255,255,255,.07);
+  --t-in:rgba(42,168,147,.22); --t-out:rgba(224,104,94,.19); --t-meta:rgba(127,163,214,.19); --t-bal:rgba(255,255,255,.07);
+  --hilo:rgba(255,255,255,.08);
+  --tico-luz:linear-gradient(150deg,rgba(255,255,255,.10),rgba(255,255,255,.02));
+  --luz-1:#2A68B0; --luz-2:#3F7FC4; --luz-3:#9A6E28; --luz-op:.17;
+}
+
+*{box-sizing:border-box}
+/* El color de fondo va en <html> y NO en <body>. Es al pedo, hasta que uno mira
+   cómo se apilan las cosas: las manchas de luz del fondo van con z-index:-1, y
+   una capa negativa se dibuja encima del fondo del lienzo pero debajo de todo
+   lo demás. Si el color viviera en <body>, según quién tenga fondo el lienzo
+   podría taparlas. Con el color en <html> y <body> transparente no hay dudas. */
+html{background:var(--ground)}
+body{
+  margin:0; background:transparent; color:var(--ink);
+  font-family:var(--f-body); font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc); outline-offset:2px; border-radius:6px}
+@media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
+
+/* ---------- el fondo ----------
+   Todo el efecto de vidrio necesita que haya ALGO atrás para desenfocar: sobre
+   un color plano, una superficie translúcida se ve igual que una opaca. Así que
+   el fondo lleva tres manchas de color muy desenfocadas que se mueven despacio.
+   Van con z-index:-1 y sin fondo propio en <html>: el color de <body> se pinta
+   en el lienzo de la página, así que las manchas quedan encima de ese color y
+   debajo de todo lo demás, sin tener que tocar el apilado del resto de la app.
+   Los colores no son decorativos porque sí: (v233) son el celeste y el azul del logo y el
+   dorado del sol. `pointer-events:none` porque es fondo. */
+.ambiente{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;contain:strict;
+  background:var(--ground)}
+.ambiente i{position:absolute;display:block;border-radius:50%;opacity:var(--luz-op);
+  filter:blur(90px);will-change:transform}
+.ambiente .l1{width:46vmax;height:46vmax;top:-14vmax;left:-12vmax;background:var(--luz-1);
+  animation:derivar1 26s ease-in-out infinite alternate}
+.ambiente .l2{width:40vmax;height:40vmax;bottom:-14vmax;right:-12vmax;background:var(--luz-2);
+  animation:derivar2 34s ease-in-out infinite alternate}
+.ambiente .l3{width:28vmax;height:28vmax;top:56%;left:-8vmax;background:var(--luz-3);opacity:calc(var(--luz-op) * .45);
+  animation:derivar3 44s ease-in-out infinite alternate}
+@keyframes derivar1{from{transform:translate(0,0) scale(1)}to{transform:translate(9vmax,7vmax) scale(1.12)}}
+@keyframes derivar2{from{transform:translate(0,0) scale(1)}to{transform:translate(-8vmax,-6vmax) scale(1.14)}}
+@keyframes derivar3{from{transform:translate(0,0) scale(1)}to{transform:translate(-7vmax,5vmax) scale(.9)}}
+/* En pantallas chicas una mancha de 46vmax pesa lo mismo que en una grande pero
+   se ve menos: se achica el desenfoque para que el teléfono no sufra. */
+@media (max-width:519px){ .ambiente i{filter:blur(64px)} }
+/* v262: mientras scrolleás, las manchas se quedan quietas: así el navegador no
+   tiene que rehacer el vidrio de las barras por dos motivos a la vez. */
+html.scrolleando .ambiente i{animation-play-state:paused}
+/* v263: las manchas ya vienen "desenfocadas" de fábrica. Antes eran círculos
+   lisos con filter:blur(90px), y ese desenfoque la placa de video lo tenía que
+   rehacer en cada cuadro, sobre una mancha del tamaño de media pantalla: en la
+   compu (pantalla grande) eso bajaba los cuadros por segundo y todo se sentía
+   pesado. Ahora cada mancha es un degradado que se dibuja una sola vez y después
+   sólo se mueve. Es más grande (×1,6) porque el borde difuso ahora va adentro de
+   la caja; el centro queda en el mismo lugar y se ve igual. Donde no hay
+   color-mix (WebView muy viejos) siguen como antes. */
+@supports (background:color-mix(in srgb, red 50%, transparent)){
+  .ambiente i{filter:none;--g:radial-gradient(closest-side,var(--c) 25%,color-mix(in srgb,var(--c) 97%,transparent) 33.3%,color-mix(in srgb,var(--c) 91%,transparent) 41.7%,color-mix(in srgb,var(--c) 79%,transparent) 50%,color-mix(in srgb,var(--c) 60.5%,transparent) 58.3%,color-mix(in srgb,var(--c) 39.5%,transparent) 66.7%,color-mix(in srgb,var(--c) 21%,transparent) 75%,color-mix(in srgb,var(--c) 9%,transparent) 83.3%,color-mix(in srgb,var(--c) 3%,transparent) 91.7%,transparent 100%)}
+  .ambiente .l1{--c:var(--luz-1);background:var(--g);width:73.6vmax;height:73.6vmax;top:-27.8vmax;left:-25.8vmax}
+  .ambiente .l2{--c:var(--luz-2);background:var(--g);width:64vmax;height:64vmax;bottom:-26vmax;right:-24vmax}
+  .ambiente .l3{--c:var(--luz-3);background:var(--g);width:44.8vmax;height:44.8vmax;top:calc(56% - 8.4vmax);left:-16.4vmax}
+}
+
+/* El vidrio de las superficies. Está en un solo lugar para que todas las
+   tarjetas, barras y globitos digan lo mismo. */
+.vidrio{background:var(--vidrio);border:1px solid var(--vidrio-borde);
+  -webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur);
+  box-shadow:var(--vidrio-luz)}
+
+/* Donde no haya backdrop-filter —WebView viejos de Android, sobre todo— el
+   vidrio se ve como un vidrio sucio: el fondo translúcido sin el desenfoque
+   deja pasar las manchas de color y el texto pierde contraste. Ahí las
+   superficies vuelven a ser opacas. Se pierde el efecto, no la lectura. */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .card,.tile,.lupa-caja,.cal,.paleta,.combo-pop,.month,.rail,.topbar,.tabs,.caldia{
+    background:var(--surface);border-color:var(--line)}
+  .card::before{display:none}
+  input[type=text],input[type=number],input[type=date],input[type=month],input[type=time],select,textarea,
+  .datebtn,.seg{background:var(--ground);border-color:var(--line)}
+  .chip,.chips button,.btn.ghost,.ampliar,.tilemas{background:var(--surface);border-color:var(--line)}
+  .tile::after{display:none}
+}

@@ -1,0 +1,151 @@
+/* Cuentas Claras · css/tarjetas.css
+   Tarjetas, recuadros de totales y grillas. */
+
+/* ---------- cards & grid ---------- */
+.grid{display:grid;gap:14px;align-items:stretch}
+.grid.g4{grid-auto-rows:1fr}
+.tile{height:100%}
+.panels{display:grid;gap:14px;grid-template-columns:1fr;align-items:stretch;--cols:1}
+@media (min-width:760px){ .panels{grid-template-columns:1fr 1fr;--cols:2} }
+.panel{position:relative}
+/* v187: en pantalla ancha los paneles del Resumen se apilan por columnas (ver
+   apilarPaneles): cada uno mide lo que muestra y el siguiente va a la columna
+   más corta, así al lado de uno largo entran varios chicos. */
+@media (min-width:760px){
+  .panels.mas{grid-auto-rows:1px;row-gap:0;align-items:start}
+  .panels.mas > *{align-self:start}
+}
+.panel-ph{border:2px dashed var(--line-strong);border-radius:var(--r);background:var(--surface-2);opacity:.5}
+.panel.dragging{position:fixed;z-index:80;pointer-events:none;margin:0;box-shadow:0 20px 44px -14px rgba(0,0,0,.4);opacity:.97}
+body.arrastrando{user-select:none;-webkit-user-select:none}
+body.arrastrando .grip{cursor:grabbing}
+.grip{background:none;border:0;cursor:grab;color:var(--ink-3);padding:5px 3px;margin:-3px 2px -3px -5px;border-radius:6px;touch-action:none;line-height:0;flex:none;align-self:flex-start}
+.grip:hover{color:var(--ink-2);background:var(--surface-2)}
+.grip svg{width:15px;height:15px;display:block}
+.g4{grid-template-columns:repeat(2,1fr)}
+.g2{grid-template-columns:1fr}
+@media (min-width:760px){ .g4{grid-template-columns:repeat(4,1fr)} .g2{grid-template-columns:1fr 1fr} }
+
+/* `hidden` tiene que ganarle a cualquier `display` que ponga yo. En el visor de
+   artifacts esto viene de arriba, pero en el APK la página está sola. */
+[hidden]{display:none !important}
+/* el gráfico ampliado */
+.lupa{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+.lupa-bg{position:absolute;inset:0;background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
+.lupa-caja{position:relative;background:var(--vidrio-pop);border:1px solid var(--vidrio-borde);border-radius:var(--r);
+  -webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur);
+  padding:16px 17px;box-shadow:0 18px 50px rgba(0,0,0,.28),inset 0 1px 0 var(--brillo);width:100%;max-width:820px;max-height:92vh;overflow:auto}
+.tablawrap{overflow-x:auto}
+table.tabla{width:100%;border-collapse:collapse;font-size:13.5px}
+table.tabla th,table.tabla td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+table.tabla th:first-child,table.tabla td:first-child{text-align:left}
+table.tabla th{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+table.tabla td{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink-2)}
+table.tabla td:first-child{font-family:var(--f-body);color:var(--ink)}
+table.tabla tr.hoy td{background:var(--surface-2)}
+table.tabla tr:last-child td{border-bottom:0}
+table.tabla tfoot td{border-bottom:0;border-top:1px solid var(--line-strong);color:var(--ink)}
+.mes-sm{display:none}
+@media (max-width:560px){
+  .lupa{padding:10px}
+  .lupa-caja{padding:14px 13px}
+  table.tabla{font-size:12px}
+  table.tabla th,table.tabla td{padding:7px 3px}
+  table.tabla th{font-size:9.5px;letter-spacing:.06em}
+  .mes-lg{display:none}
+  .mes-sm{display:inline}
+}
+#chMesWrap{position:relative}
+#chMes{cursor:zoom-in}
+#chMes:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:8px}
+.ampliar{position:absolute;top:-2px;right:0;background:var(--vidrio-2);border:1px solid var(--hueco-borde);color:var(--ink-3);
+  border-radius:9px;width:28px;height:28px;display:grid;place-items:center;cursor:pointer;padding:0}
+.ampliar:hover{color:var(--acc);border-color:var(--acc)}
+.ampliar svg{width:14px;height:14px}
+/* El mismo botón de "ampliar", pero adentro de un tile. Va en la esquina porque
+   el número tiene que seguir siendo lo primero que se ve. */
+.tilemas{position:absolute;top:16px;right:14px;z-index:2;background:var(--vidrio-2);border:1px solid var(--hueco-borde);
+  color:var(--ink-3);border-radius:9px;width:26px;height:26px;display:grid;place-items:center;cursor:pointer;padding:0}
+.tilemas:hover{color:var(--acc);border-color:var(--acc)}
+.tilemas svg{width:13px;height:13px}
+/* La tabla de saldos por medio de pago. Son cuatro columnas de números largos:
+   en un teléfono no entran, y la que quedaba cortada era justo "Queda", que es
+   la que se va a mirar. Así que abajo de 560 px el entró/salió se va a un
+   renglón chico debajo del nombre y quedan sólo dos columnas. */
+table.tabla td.rojo{color:var(--out)}
+table.tabla td.verde{color:var(--in)}
+table.tabla td small.soloch{display:none}
+@media (max-width:560px){
+  table.tabla th.det,table.tabla td.det{display:none}
+  table.tabla td small.soloch{display:block;font-family:var(--f-mono);font-size:10.5px;
+    color:var(--ink-3);white-space:normal;margin-top:3px;line-height:1.35}
+}
+/* La tarjeta es la pieza de vidrio de la app. Dos cosas que parecen manías y no
+   lo son:
+   1) Nada de `overflow:hidden`, aunque el reflejo diagonal tentaría a recortarlo
+      con un ::after: adentro de las tarjetas se abren la paleta de colores y el
+      desplegable de categorías, y los dos salen del recuadro. Por eso el reflejo
+      va como una capa más del propio fondo (el primer degradado de --vidrio).
+   2) El `backdrop-filter` NO va en la tarjeta: va en un ::before que la tapa
+      entera. Es que `backdrop-filter` crea un contexto de apilado, y adentro de
+      un contexto de apilado el z-index de la paleta deja de valer para afuera:
+      la tarjeta de más abajo le pasaba por encima y la paleta quedaba tapada y
+      sin poder tocarse. Poniéndolo en el pseudo-elemento, el vidrio es el mismo
+      y la tarjeta sigue sin atrapar a lo que se abre adentro. */
+.card{position:relative;background:transparent;border:1px solid var(--vidrio-borde);border-radius:var(--r);
+  padding:16px 17px;box-shadow:var(--vidrio-luz)}
+.card::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--vidrio);
+  -webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur)}
+.card h2{margin:0 0 2px;font-family:var(--f-body);font-size:15px;font-weight:600;letter-spacing:-.01em}
+.card .sub{margin:0 0 14px;font-size:12.5px;color:var(--ink-3)}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px 12px;margin-bottom:12px;flex-wrap:wrap}
+.card-head > div:nth-of-type(1){min-width:0;flex:1 1 200px}
+@media (max-width:479px){ .card-head .seg{width:100%} .card-head .seg button{flex:1} }
+.card-head h2{margin:0}
+
+.lab{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+
+.tile{--tc:var(--ink-2);--tt:var(--t-bal);
+  background:radial-gradient(120% 95% at 0 0,var(--tt),transparent 62%),var(--vidrio);
+  border:1px solid var(--vidrio-borde);border-radius:var(--r);padding:14px 18px 15px;
+  box-shadow:var(--vidrio-luz);-webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur);
+  position:relative;overflow:hidden;display:flex;flex-direction:column}
+.tile.in{--tc:var(--in);--tt:var(--t-in)} .tile.out{--tc:var(--out);--tt:var(--t-out)}
+.tile.meta-c{--tc:var(--meta);--tt:var(--t-meta)}
+/* v181: arriba, el ícono en una pastilla de vidrio teñida y la etiqueta; abajo
+   del monto, una línea finita separa el detalle. La franja de color del costado
+   se reemplazó por el resplandor de la esquina: se lee igual de qué es cada
+   recuadro y queda más prolijo. */
+.tile .tile-top{display:flex;align-items:center;gap:10px;min-width:0;padding-right:30px}
+.tile .tico{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;color:var(--tc);
+  background:var(--tico-luz),var(--tt);
+  border:1px solid var(--vidrio-borde);box-shadow:inset 0 1px 0 var(--brillo),0 1px 3px rgba(0,0,0,.06)}
+.tile .tico svg{width:16px;height:16px}
+.tile .tile-top .lab{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .meta:empty{display:none}
+.tile .tile-top + .num,.tile .tile-top + .nums{margin-top:12px}
+.tile .tile-top ~ .meta{margin-top:auto;padding-top:9px;border-top:1px solid var(--hilo)}
+.tile .tile-top ~ .num + .meta,.tile .tile-top ~ .nums + .meta{margin-top:10px}
+/* El tile SÍ recorta (ya lo hacía por la franja de color del costado), así que
+   acá el reflejo puede ser el barrido diagonal de verdad: una banda de luz
+   cruzada que es lo que le da el aspecto de vidrio mojado. Va sin eventos y con
+   z-index por debajo del botón de ampliar, que está en 2. */
+.tile::after{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;pointer-events:none;
+  background:linear-gradient(45deg,transparent 44%,var(--brillo) 50%,transparent 56%);
+  transform:rotate(30deg);opacity:.38}
+/* el canto de arriba, más brillante: es lo que hace que se lea como vidrio grueso */
+.tile::before{content:"";position:absolute;left:14px;right:14px;top:0;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--brillo),transparent);opacity:.9}
+/* Los montos de los tiles van en la tipografía de interfaz, no en la de
+   titulares. Fraunces es una serif de display: linda para el nombre de la app,
+   pero con remates y trazos finos que a 21-27 px hacen trabajar de más para leer
+   algo como "$ 8.333,33", que es justamente lo que uno mira primero. Instrument
+   Sans en semibold, con cifras tabulares, da el mismo peso visual y se lee de un
+   vistazo; además es más angosta, así que entra mejor en un teléfono. */
+.tile .num{font-family:var(--f-body);font-weight:600;font-size:clamp(21px,4.4vw,27px);letter-spacing:-.02em;margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.15;white-space:nowrap}
+.tile .meta{font-size:11.5px;color:var(--ink-3);margin-top:5px;font-variant-numeric:tabular-nums}
+.tile.in .num{color:var(--in)} .tile.out .num{color:var(--out)} .tile.meta-c .num{color:var(--meta)}
+.tile .stripe{position:absolute;left:0;top:0;bottom:0;width:3px;display:none}
+.tile > *{min-width:0}
+.tile.in .stripe{background:var(--in)} .tile.out .stripe{background:var(--out)}
+.tile.meta-c .stripe{background:var(--meta)} .tile.bal .stripe{background:var(--ink-3)}

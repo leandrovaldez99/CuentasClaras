@@ -1,0 +1,44 @@
+/* Cuentas Claras · css/cuenta.css
+   La pantalla para entrar o crear la cuenta. Tapa la app entera hasta que hay
+   sesión; va por arriba de todo menos de la animación de entrada. */
+.cuenta{
+  position:fixed;inset:0;z-index:200;background:var(--ground);
+  display:flex;align-items:flex-start;justify-content:center;
+  overflow-y:auto;padding:max(28px, env(safe-area-inset-top)) 16px 28px;
+}
+.cuenta[hidden]{display:none}
+body.con-cuenta{overflow:hidden}
+.cuenta-caja{
+  width:100%;max-width:380px;margin:auto 0;
+  background:var(--surface);border:1px solid var(--line);border-radius:18px;
+  padding:26px 22px 22px;box-shadow:0 10px 40px rgba(0,0,0,.10);
+}
+.cuenta-marca{justify-content:center;margin:0 0 20px}
+.cuenta-caja .seg{display:flex;margin:0 0 16px}
+.cuenta-caja form{display:flex;flex-direction:column;gap:12px}
+.cuenta-caja .field{margin:0}
+.cuenta-caja input{width:100%}
+.cuenta-caja .btn{width:100%;justify-content:center}
+.cuenta-caja .rowflex .btn{width:auto;flex:1}
+.cuenta-titulo{font-family:var(--f-disp);font-size:20px;margin:0 0 8px;color:var(--ink)}
+.cuenta-msg{margin:0;padding:9px 12px;border-radius:10px;background:var(--out-soft);color:var(--out);font-size:13.5px;line-height:1.4}
+.cuenta-msg[hidden]{display:none}
+.cuenta-link{
+  background:none;border:0;padding:6px;margin:0 auto;cursor:pointer;
+  color:var(--ink-2);font:inherit;font-size:13.5px;text-decoration:underline;text-underline-offset:3px;
+}
+.cuenta-link:hover{color:var(--ink)}
+.cuenta-pie{margin:0;text-align:center}
+.cuenta-espera{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;color:var(--ink-2);font-size:14.5px}
+.cuenta-rueda{
+  width:18px;height:18px;flex:none;border-radius:50%;
+  border:2px solid var(--line);border-top-color:var(--ink-2);
+  animation:cuentaGira .8s linear infinite;
+}
+@keyframes cuentaGira{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){ .cuenta-rueda{animation-duration:2.4s} }
+
+/* Sumarse a un grupo con el código: el código y el nombre, uno debajo del otro */
+.fm-inv.fm-sumar{grid-template-columns:minmax(0,1fr)}
+#fmCodigoIn{font-family:var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+#fmCodigo{user-select:all}

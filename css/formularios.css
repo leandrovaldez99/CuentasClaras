@@ -1,0 +1,211 @@
+/* Cuentas Claras · css/formularios.css
+   Campos, botones, interruptores y desplegables. */
+
+/* ---------- forms ---------- */
+.form{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+@media (min-width:700px){ .form{grid-template-columns:repeat(6,1fr)} .form .wide{grid-column:span 2} .form .full{grid-column:1/-1} }
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field > .lab{margin-left:1px}
+input[type=text],input[type=email],input[type=password],input[type=number],input[type=date],input[type=month],input[type=time],select,textarea{
+  width:100%;background:var(--hueco);border:1px solid var(--hueco-borde);border-radius:11px;padding:0 10px;font-size:14.5px;color:var(--ink);
+  height:var(--ctl);box-sizing:border-box;line-height:normal;
+}
+textarea{height:auto;padding:9px 10px}
+/* v260: los desplegables, iguales en todos los teléfonos: sin el estilo del sistema,
+   con una flechita propia; al tocarlos se abre una lista como el calendario */
+select{-webkit-appearance:none;appearance:none;background-image:var(--chev);background-repeat:no-repeat;
+  background-position:right 10px center;background-size:15px 15px;padding-right:32px;cursor:pointer;
+  text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+select.abierto{border-color:var(--acc)}
+/* v277: en el iPhone, tocar el <select> abría nuestra lista y, encima, la del
+   sistema. Ahora el <select> no recibe el toque (lo recibe la casilla que lo
+   contiene, y desde ahí se abre la nuestra): el sistema nunca se entera. Con el
+   teclado sigue funcionando como siempre. */
+select:not([multiple]):not([data-nativo]):not([aria-hidden="true"]){pointer-events:none}
+.combo select{pointer-events:auto}
+.cal.selpop{width:auto;padding:5px;max-height:min(330px, 62vh);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.selpop .combo-o{align-items:center;min-height:38px}
+.selpop .combo-o[aria-selected="true"]{background:var(--acc-soft)}
+.selpop .combo-o[aria-selected="true"] b{color:var(--acc);font-weight:600}
+.selpop .combo-o svg{width:16px;height:16px;flex:none;color:var(--acc)}
+.selpop .combo-o:disabled{opacity:.45;cursor:default}
+.selpop .combo-o:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+/* v277: en el iPhone la casilla de la hora tiene un ancho mínimo propio y se
+   metía debajo de la de al lado (Categoría). Sin el estilo del sistema se ajusta
+   a su columna como las demás. */
+input[type=time]{-webkit-appearance:none;appearance:none;min-width:0;max-width:100%;display:block;font-family:var(--f-mono)}
+input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:1.3em}
+input:hover,select:hover{border-color:var(--hueco-fuerte)}
+input::placeholder{color:var(--ink-3)}
+.money-in{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+.form2{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(158px,1fr))}
+.form2 .full{grid-column:1/-1}
+.form2 input,.form2 select{min-width:0}
+/* Cuando una etiqueta larga pasa a dos renglones ("Dónde te lo depositan" en
+   una pantalla angosta), la casilla de esa columna bajaba y quedaba desfasada de
+   las de al lado. Con el contenido pegado abajo, las casillas de una misma fila
+   quedan siempre a la misma altura: la etiqueta de dos renglones crece para
+   arriba. */
+.form2 > .field{justify-content:flex-end}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.datewrap{position:relative;display:block}
+.datewrap input{
+  position:absolute;inset:0;width:100%;height:100%;opacity:0;padding:0;border:0;background:none;
+  pointer-events:none;
+}
+.datebtn{
+  position:relative;z-index:2;display:flex;align-items:center;gap:8px;width:100%;
+  background:var(--hueco);border:1px solid var(--hueco-borde);border-radius:11px;padding:0 10px;
+  color:var(--ink);font-family:var(--f-body);font-size:14.5px;text-align:left;cursor:pointer;
+  height:var(--ctl);box-sizing:border-box;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.datebtn:hover{border-color:var(--hueco-fuerte)}
+.datebtn:active{background:var(--surface-2)}
+.datebtn svg{width:16px;height:16px;color:var(--ink-2);flex:none}
+.datebtn .d-sm{display:none}
+.datebtn .d-lg{font-variant-numeric:tabular-nums}
+@media (max-width:620px){
+  .form2.pairfecha{grid-template-columns:1fr auto}
+  .form2.pairfecha .fullsm{grid-column:1/-1}
+  .form2.pairfecha .fecha{justify-content:flex-end}
+  .form2.pairfecha .fecha > .lab{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .form2.pairfecha .datebtn{
+    width:auto;justify-content:center;gap:6px;padding:0 12px;
+    font-family:var(--f-mono);font-size:13.5px;font-variant-numeric:tabular-nums;
+  }
+  .form2.pairfecha .datebtn .d-lg{display:none}
+  .form2.pairfecha .datebtn .d-sm{display:inline}
+}
+/* Dos monedas en un tile: van del mismo tamaño, no una grande y una chiquita.
+   Si el mes fue todo en dólares, el dólar ocupa el lugar del número principal. */
+.tile .nums{margin-top:7px;display:flex;flex-direction:column;gap:1px}
+.tile .nums .num{margin-top:0}
+.tile .nums.dual .num{font-size:clamp(18px,3.5vw,22px)}
+.tile .nums.dual .num + .num{color:var(--ink-2)}
+/* El tamaño del monto se calcula contra el ancho del TILE, no el de la
+   pantalla: los tiles van de a dos o de a cuatro según el ancho, así que a 760
+   px cada uno es más angosto que a 620. Con vw, un "$ 3.273.686,74" se pasaba
+   del recuadro y quedaba cortado por el overflow —ya pasaba en pantallas de 300
+   y 320 px—. Con `cqi` el número se achica sólo lo necesario y siempre entra.
+   El WebView viejo que no entienda @container se queda con la regla de arriba. */
+@supports (container-type: inline-size){
+  .tile{container-type:inline-size}
+  .tile .num{font-size:clamp(14px,13.5cqi,27px)}
+  .tile .nums.dual .num{font-size:clamp(12px,12.5cqi,22px)}
+}
+/* v206: los interruptores, más grandes (antes 30×17): más fáciles de ver y de tocar */
+.swi{display:flex;align-items:center;gap:10px;margin-top:9px;background:none;border:0;padding:0;min-height:30px;
+  cursor:pointer;color:var(--ink-3);font-family:inherit;font-size:13px;text-align:left;line-height:1.3}
+.swi-t{flex:none;width:42px;height:24px;border-radius:999px;background:var(--surface-2);
+  border:1px solid var(--line-strong);position:relative;transition:background .15s}
+/* la perilla siempre clara: en modo oscuro, del color de la tarjeta, no se veía apagado */
+.swi-t::after{content:"";position:absolute;top:1px;left:1px;width:20px;height:20px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}
+/* en los recuadros chicos del Resumen el texto queda como estaba, para que entre */
+.tile .swi{font-size:11.5px;gap:8px}
+.swi[aria-checked="true"] .swi-t{background:var(--acc);border-color:var(--acc)}
+/* v255: un interruptor chico al lado del título de un campo ("Cuándo · Quincenal") */
+.lab-fila{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:22px}
+.lab-fila .lab{min-width:0;line-height:1.35}
+/* v259: el desplegable bloqueado ("Por quincena") se ve apagado y sin flechita */
+#fCuando:disabled{opacity:.62;cursor:not-allowed;background-image:none;color:var(--ink-2)}
+.lab-fila .swi{flex:none}
+.swi.swi-chico{margin:0;min-height:22px;gap:7px;font-size:12px;font-weight:500}
+.swi.swi-chico .swi-t{width:32px;height:18px}
+.swi.swi-chico .swi-t::after{width:14px;height:14px}
+.swi.swi-chico[aria-checked="true"] .swi-t::after{transform:translateX(14px)}
+.swi[aria-checked="true"] .swi-t::after{transform:translateX(18px)}
+.swi[aria-checked="true"]{color:var(--ink-2)}
+.swi:hover{color:var(--ink-2)}
+#cardTema .card-head{margin-bottom:0;align-items:center}
+#cardTema .sub{margin:0}
+#segTema{flex:0 1 330px}
+@media (max-width:479px){ #segTema{flex-basis:100%} }
+.ctacard{padding:2px 0}
+.ctacard.sep{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.ctanom{flex:0 1 280px;min-width:0;font-weight:600}
+/* Cada cuenta: el nombre arriba y, abajo, el banco y la tasa uno al lado del
+   otro. Las casillas tienen el ancho de lo que va adentro: un nombre de banco
+   no necesita 700 px, y una tasa como "19,63" entra en 90. */
+.ctaform{display:grid;grid-template-columns:minmax(0,300px) minmax(118px,150px);gap:12px;align-items:end}
+@media (max-width:359px){ .ctaform{grid-template-columns:minmax(0,1fr) 112px;gap:8px} }
+.ctaform.conborrar{grid-template-columns:minmax(0,300px) minmax(118px,150px) auto}
+/* En el teléfono no entran las tres cosas en un renglón sin que el banco quede
+   cortado: el banco va arriba con el tacho al lado, y la tasa abajo. */
+@media (max-width:519px){
+  .ctaform.conborrar{grid-template-columns:minmax(0,1fr) auto;gap:10px 8px}
+  .ctaform.conborrar > .field:nth-child(1){grid-column:1;grid-row:1}
+  .ctaform.conborrar > .ctaborrar{grid-column:2;grid-row:1;align-self:end}
+  .ctaform.conborrar > .field:nth-child(2){grid-column:1;grid-row:2;max-width:170px}
+}
+.ctaborrar{display:flex;align-items:center;min-height:var(--ctl)}
+.ctaborrar .iconbtn{padding:8px}
+.ctacard .ctanom{flex:none}
+/* v218: en pantalla grande, con más de una cuenta, van una al lado de la otra,
+   cada una en su recuadro (en el teléfono siguen una abajo de la otra). */
+@media (min-width:920px){
+  /* v219: todos los recuadros del mismo alto (el de la cuenta más larga), aunque
+     una tenga la casilla del nombre o la línea de lo que generó y otra no */
+  #cuentaList.varias{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));grid-auto-rows:1fr;gap:12px;align-items:stretch}
+  #cuentaList.varias .ctacard{box-sizing:border-box;height:100%}
+  #cuentaList.varias .ctacard,#cuentaList.varias .ctacard.sep{margin:0;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--hueco)}
+  #cuentaList.varias .ctaform{grid-template-columns:minmax(0,1fr) minmax(110px,140px)}
+  #cuentaList.varias .ctaform.conborrar{grid-template-columns:minmax(0,1fr) minmax(110px,140px) auto}
+  #cuentaList.varias .ctanomf{max-width:none!important}
+}
+.tnawrap{display:flex;align-items:center;gap:4px;min-width:0}
+.tnawrap .pctin{flex:1;min-width:0}
+/* La tasa que viene de la lista queda trabada: se ve como un dato, no como una
+   casilla para escribir, y para cambiarla hay que tocar el lápiz. Así no se
+   pisa sin querer al pasar por la pantalla. */
+.pctin input.bloq{background:transparent;border-style:dashed;color:var(--ink-2);cursor:default}
+.pctin input.bloq:hover{border-color:var(--hueco-borde)}
+.iconbtn.lapiz{flex:none;padding:7px;border-radius:9px}
+.iconbtn.lapiz:hover{color:var(--acc);background:var(--acc-soft)}
+.iconbtn.lapiz[aria-pressed="true"]{color:var(--acc)}
+.iconbtn.lapiz svg{width:16px;height:16px}
+.conmon{display:flex;align-items:center;gap:6px;min-width:0}
+.conmon .money-in{flex:1;min-width:0}
+/* Dos importes al lado, uno por moneda: el símbolo va pegado adelante y cada
+   caja se encoge sola, así entran los dos hasta en 300 px. */
+.dosmon{display:grid;grid-template-columns:1fr 1fr;gap:18px;min-width:0}
+.dosmon .pctin{min-width:0}
+.pctin.mon i{order:-1;font-size:13px;color:var(--ink-3)}
+/* El número va a la izquierda, pegado a SU símbolo. Alineado a la derecha, el
+   "0" de los pesos quedaba justo al lado del "U$S" de la caja de al lado y se
+   leía como si fuera de los dólares. */
+.pctin.mon input,.pctin.plata input{text-align:left}
+.pista{display:block;color:var(--ink-3);font-size:11.5px;line-height:1.35;margin-top:1px}
+/* En el teléfono el formulario ocupa todo; en pantalla grande, estirar dos
+   cajas de importe a 900 px no ayuda a nadie. */
+#fMeta{max-width:620px}
+@media (max-width:359px){ .dosmon{gap:12px} .pctin.mon i{font-size:12px} }
+#fMeta .form2{gap:14px}
+.seg.mini{padding:2px;gap:2px;flex:none}
+.seg.mini button{padding:5px 8px;font-size:12.5px;font-family:var(--f-mono);min-width:34px}
+.seg.mini button[aria-pressed="true"]{background:var(--surface);color:var(--ink)}
+.seg{display:inline-flex;background:var(--hueco);border:1px solid var(--hueco-borde);border-radius:11px;padding:3px;gap:3px}
+.seg button{flex:1;background:none;border:0;cursor:pointer;padding:6px 12px;border-radius:7px;font-size:13.5px;font-weight:500;color:var(--ink-2);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.seg.tone button[aria-pressed="true"][data-v="ingreso"]{background:var(--in-soft);color:var(--in)}
+.seg.tone button[aria-pressed="true"][data-v="gasto"]{background:var(--out-soft);color:var(--out)}
+
+.btn{background:var(--btn);color:var(--btn-ink);border:0;border-radius:11px;padding:0 16px;font-weight:600;font-size:14px;cursor:pointer;
+  min-height:var(--ctl);display:inline-flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box}
+.btn:hover{opacity:.88}
+.btn.ghost{background:var(--vidrio-2);border:1px solid var(--hueco-borde);color:var(--ink-2);font-weight:500}
+.btn.ghost:hover{border-color:var(--line-strong);color:var(--ink);opacity:1}
+.btn.sm{padding:0 12px;font-size:13px;min-height:34px}
+.app-ver{margin:18px 0 6px;text-align:center;font-size:11px;letter-spacing:.02em;color:var(--ink-3);opacity:.75;font-variant-numeric:tabular-nums}
+/* v242: botones chicos con borde de color, para acciones dentro de una fila */
+.btn.ghost.acc{color:var(--acc);border-color:var(--acc)}
+.btn.ghost.acc:hover{background:var(--acc-soft);color:var(--acc)}
+.btn.ghost.peligro{color:var(--out);border-color:var(--out)}
+.btn.ghost.peligro:hover{background:var(--out-soft);color:var(--out)}
+.btn.ghost.peligro.armado{background:var(--out-soft);font-weight:600}
+.btn.sm.ico{gap:6px}
+.btn.sm.ico svg{width:15px;height:15px;flex:none}
+.card-head .btn.sm{white-space:nowrap}

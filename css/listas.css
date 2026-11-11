@@ -1,0 +1,286 @@
+/* Cuentas Claras · css/listas.css
+   Filas de movimientos, cuotas, fijos y ahorros. */
+
+/* ---------- lists ---------- */
+.rows{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:11px 2px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .mark{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+.row .mark svg{width:16px;height:16px}
+.mark.in{background:var(--in-soft);color:var(--in)}
+.mark.out{background:var(--out-soft);color:var(--out)}
+.mark.cuota{background:var(--cuota-soft);color:var(--cuota)}
+.mark.meta{background:var(--meta-soft);color:var(--meta)}
+.mark.carry{background:var(--surface-2);color:var(--ink-2)}
+.mark.tasa{background:var(--in-soft);color:var(--in)}
+.mark.saca{background:var(--surface-2);color:var(--meta)}
+.mark.fijo{background:var(--out-soft);color:var(--out)}
+.mark.pase{background:var(--surface-2);color:var(--ink-2)}
+/* En el detalle de un día, el ícono de cada GASTO se pinta con el color de su
+   grupo, y todo lo que NO es un gasto va en un bloque de color pleno. La
+   diferencia es de forma y no de tono: como los colores de los grupos los
+   elegís vos, podés tener un grupo verde, y ahí un gasto y un ingreso serían
+   del mismo color. Con el bloque lleno se siguen distinguiendo igual. */
+.mark.llena{color:var(--surface)}
+.mark.llena.in,.mark.llena.tasa{background:var(--in)}
+.mark.llena.meta{background:var(--meta)}
+.mark.llena.saca{background:var(--ink-2)}
+.mark.llena.out,.mark.llena.cuota,.mark.llena.fijo{background:var(--out)}
+.mark.llena.pase{background:var(--ink-2)}
+/* Pasar plata de un medio a otro: adentro de "Tu plata, medio por medio". */
+.pase-box{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.pase-box h3{margin:0 0 10px;font-size:14px;font-weight:600}
+.pase-box .pista{margin-top:10px}
+#paseLink{margin:12px 0 0}
+/* Tus dispositivos: el celular y la compu con los mismos datos. */
+#cardDisp .vj-auto{margin:0 0 10px}
+.dv-lista{margin:0 0 12px;padding:0;list-style:none;display:grid;gap:6px}
+.dv-lista li{font-size:13.5px;color:var(--ink-2);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.dv-lista li b{color:var(--ink);font-weight:600}
+.dv-caja{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+.dv-caja textarea{width:100%;display:block;resize:vertical;font-family:var(--f-mono);font-size:12px;word-break:break-all;line-height:1.4}
+.dv-caja p{margin:0 0 8px}
+.dv-caja .rowflex{margin-top:8px;gap:8px}
+.dv-preg{border:2px solid var(--meta);background:var(--meta-soft)}
+/* v265: pasar los datos con un QR, y las copias en la misma tarjeta */
+.dv-copias{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.dv-h3{font-size:14.5px;font-weight:600;margin:0 0 4px;color:var(--ink)}
+.dv-pasar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.dv-pasar .btn{flex-direction:column;align-items:flex-start;text-align:left;gap:3px;padding:12px 13px;height:auto;min-height:72px;white-space:normal;line-height:1.25}
+.dv-pasar .btn b{font-weight:600;font-size:14px}
+.dv-pasar .btn span{font-size:12px;font-weight:400;opacity:.85}
+.dv-pasar svg{width:20px;height:20px;margin-bottom:2px}
+@media (max-width:420px){ .dv-pasar{grid-template-columns:1fr} .dv-pasar .btn{min-height:0} }
+/* v267: "Traer / Pasar" como un deslizador: el color se corre al que elegiste y
+   queda arriba mientras se ve el QR, para recordar para dónde van los datos */
+.dv-slider{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:4px;margin:0 0 10px;border:1px solid var(--line);border-radius:16px;background:var(--surface-2)}
+.dv-sl-luz{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:12px;background:var(--btn);
+  box-shadow:0 2px 10px rgba(0,0,0,.14);transition:transform .32s cubic-bezier(.3,.7,.2,1)}
+.dv-slider[data-sel="dar"] .dv-sl-luz{transform:translateX(100%)}
+.dv-slider button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;background:none;border:0;
+  border-radius:12px;padding:11px 12px;color:var(--ink-2);font:inherit;cursor:pointer;transition:color .25s;-webkit-tap-highlight-color:transparent;min-width:0}
+.dv-slider button b{font-weight:600;font-size:14px;color:inherit;line-height:1.25}
+.dv-slider button span{font-size:12px;opacity:.85;line-height:1.3}
+.dv-slider svg{width:20px;height:20px;margin-bottom:2px;flex:none}
+.dv-slider[data-sel="traer"] [data-dv="qrtraer"],.dv-slider[data-sel="dar"] [data-dv="qrdar"]{color:var(--btn-ink)}
+.dv-slider button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.dv-slider + .dv-caja{margin-top:0}
+/* v273: con datos cargados, traer los de otro queda como opción discreta */
+.dv-alt{margin:-2px 0 12px;font-size:12.5px;line-height:1.4}
+.dv-alt button{background:none;border:0;padding:4px 0;color:var(--ink-3);font:inherit;text-align:left;cursor:pointer;
+  text-decoration:underline;text-decoration-color:color-mix(in srgb, currentColor 45%, transparent);text-underline-offset:3px}
+.dv-alt button:hover{color:var(--ink-2)}
+.dv-pasar + .dv-caja{margin-top:0}
+.dv-otra{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.dv-otra .note{margin:0;flex:1 1 100%}
+.dv-otra .btn{gap:7px}
+.dv-otra .btn svg{width:17px;height:17px;flex:none}
+.dv-codigo{margin:2px 0 6px;font-family:var(--f-mono);font-size:24px;font-weight:500;letter-spacing:.1em;color:var(--ink);text-align:center;font-variant-numeric:tabular-nums;word-spacing:.2em}
+.dv-qrcaja .vj-qr{margin:6px 0 4px}
+.dv-qrcaja .vj-qrsvg{width:min(100%,250px)}
+.dv-qrcaja > p.note{text-align:center}
+.dv-codin{width:100%;font-family:var(--f-mono);font-size:20px;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-top:6px}
+.dv-busca{display:flex;gap:10px;align-items:center}
+.dv-busca i{width:16px;height:16px;flex:none;border-radius:50%;border:2px solid var(--acc);border-right-color:transparent;animation:dvGira .8s linear infinite}
+@keyframes dvGira{to{transform:rotate(360deg)}}
+/* la cámara */
+#qrScan{position:fixed;inset:0;z-index:96;background:#060a14;display:flex;align-items:center;justify-content:center;padding:16px}
+#qrScan[hidden]{display:none}
+#qrScan .qs-caja{width:min(400px,100%);display:flex;flex-direction:column;align-items:center;gap:14px;color:#fff;text-align:center}
+#qrScan .qs-tit{margin:0;font-size:17px;font-weight:600}
+#qrScan .qs-visor{position:relative;width:min(78vw,340px);aspect-ratio:1;border-radius:22px;overflow:hidden;background:#000}
+#qrScan video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#qrScan .qs-marco{position:absolute;inset:14%;border-radius:16px;box-shadow:0 0 0 999px rgba(0,0,0,.35);border:3px solid rgba(255,255,255,.9)}
+#qrScan .qs-nota{margin:0;font-size:14px;line-height:1.45;color:rgba(255,255,255,.85);max-width:320px}
+#qrScan .qs-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+#qrScan .btn.ghost{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.08)}
+/* Grupo familiar: quién cargó cada cosa, los gastos a medias y el filtro de arriba. */
+.verq{margin:0 0 14px}
+.verq .seg{width:100%;overflow-x:auto}
+.verq .seg button{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.verq .note{margin:7px 2px 0}
+.qb{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.qb .field{max-width:320px}
+.qb-med{display:grid;gap:8px}
+.qb-med .swi{margin-top:0;font-size:14px;font-weight:500;color:var(--ink-2)}
+.qb-med .swi[aria-checked="true"]{color:var(--acc)}
+/* v282: cómo se divide este gasto (por defecto, la forma del grupo) */
+.qb-rep{display:grid;gap:7px}
+.qb-rep .seg{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.qb-rep .seg button{min-width:0;overflow:hidden;text-overflow:ellipsis;padding:6px 6px}
+.qb-def{font-size:12px;color:var(--ink-3);line-height:1.4}
+.qb-def b{color:var(--ink-2);font-weight:600}
+.qb-def .linkbtn{margin-left:4px;font-size:12px}
+.qb-mano{display:grid;gap:6px;max-width:360px}
+.qb-mano .fila{display:grid;grid-template-columns:minmax(0,1fr) 78px 86px;gap:8px;align-items:center;font-size:14px}
+.qb-mano .fila > span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qb-mano .pctin{position:relative}
+.qb-mano .pctin input{height:36px;text-align:right;padding-right:24px;font-family:var(--f-mono)}
+.qb-mano .pctin i{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12.5px;color:var(--ink-3)}
+.qb-mano .plata{font-family:var(--f-mono);font-size:12.5px;color:var(--ink-3);text-align:right}
+.qb-suma{font-size:12px;color:var(--in)}
+.qb-suma.mal{color:var(--warn)}
+/* v282: cargar algo de otra persona del grupo */
+.qb-aviso{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--acc-soft);color:var(--ink-2);font-size:12.8px;line-height:1.42;max-width:520px}
+.qb-aviso svg{flex:none;width:17px;height:17px;color:var(--acc);margin-top:1px}
+.qb-aviso b{color:var(--ink);font-weight:600}
+/* v284: pendientes del grupo familiar */
+.pend{margin:0 0 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);background:color-mix(in srgb,var(--warn) 9%,transparent);overflow:hidden}
+.pend.afavor{border-color:color-mix(in srgb,var(--in) 45%,transparent);background:color-mix(in srgb,var(--in) 8%,transparent)}
+.pend-cab{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:11px;align-items:center;padding:12px 13px;width:100%;background:none;border:0;color:inherit;text-align:left;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.reloj{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent);flex:none}
+.reloj svg{width:19px;height:19px}
+.pend.afavor .pend-cab .reloj{color:var(--in);background:color-mix(in srgb,var(--in) 16%,transparent)}
+.pend-cab b{display:block;font-size:14.5px}
+.pend-cab small{display:block;font-size:12.5px;color:var(--ink-3)}
+.pend-cab .tot{font-family:var(--f-mono);font-weight:500;color:var(--warn);font-size:15px;text-align:right;white-space:nowrap}
+.pend.afavor .pend-cab .tot{color:var(--in)}
+.pend-cab .tot small{display:flex;justify-content:flex-end;gap:3px;align-items:center;color:var(--ink-3);font-family:var(--f-body);font-size:11.5px}
+.pend-cab .tot svg{width:15px;height:15px;transition:transform .2s}
+.pend.abierto .pend-cab .tot svg{transform:rotate(180deg)}
+.pend-cuerpo{border-top:1px solid color-mix(in srgb,var(--warn) 25%,transparent);padding:4px 13px 13px}
+.pi{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--hilo)}
+.pi .reloj{width:28px;height:28px}.pi .reloj svg{width:16px;height:16px}
+.pi b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pi small{display:block;font-size:12px;color:var(--ink-3)}
+.pi .der{text-align:right}
+.pi .der > span{display:block;font-family:var(--f-mono);font-size:14px;color:var(--warn);white-space:nowrap}
+.pi .der .btn{margin-top:5px;min-height:30px;font-size:12.5px;padding:0 11px}
+.pi.mio .der > span{color:var(--in)}
+.pi.mio .reloj{color:var(--in);background:color-mix(in srgb,var(--in) 16%,transparent)}
+.pend .sub-t{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin:12px 0 2px}
+.pend-cierre{margin-top:13px;padding:13px;border-radius:12px;background:var(--hueco);border:1px solid var(--hueco-borde)}
+.pend-cierre h4{margin:0 0 4px;font-size:14px}
+.pend-cierre p{margin:0 0 10px;font-size:12.8px;color:var(--ink-2);line-height:1.4}
+.pend-flecha{display:flex;align-items:center;gap:8px;font-size:15px;margin:2px 0 8px}
+.pend-flecha b{font-family:var(--f-mono);color:var(--warn);margin-left:auto}
+.pend-conf{margin:8px 0 2px;padding:12px;border-radius:12px;background:var(--acc-soft);font-size:13px;line-height:1.4;color:var(--ink-2)}
+.pend-conf .rowflex{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+.pend-conf select{flex:1 1 150px;min-width:0}
+.pend-conf .linkbtn{font-size:12.5px}
+.row .mark.pendm{color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent)}
+.row.pendrow{cursor:pointer}
+.row .t .cargo{display:table;margin-top:4px;padding:1px 9px;border-radius:999px;background:var(--acc-soft);color:var(--acc);font-size:11.5px;font-weight:600;font-style:normal;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.fm-per{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.fm-per:first-child{border-top:0}
+.fm-per b{font-weight:600}
+.fm-per i{font-style:normal;font-size:12px;color:var(--ink-3);margin-left:6px}
+.fm-per small{grid-column:1/-1;color:var(--ink-3);font-size:12.5px}
+.fm-per .fm-sacar{grid-column:1/-1;margin-top:8px}
+.fm-sacar .rowflex{flex-wrap:wrap;gap:8px}
+.fm-rep{display:grid;gap:6px;margin-top:10px}
+.fm-rep .kv{padding:8px 0}
+.fm-inv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin-top:12px;max-width:520px}
+/* v240: al invitar, qué pasa con lo que ya tenía cargado */
+.fm-trae{margin-top:12px;max-width:520px}
+/* v241: una personita (de uno) o varias (a medias) delante del nombre */
+.qico{display:inline-block;width:14px;height:14px;margin:0 5px 0 0;vertical-align:-2px;color:var(--ink-3);flex:none}
+.qico.med{width:19px;color:var(--acc)}
+.qico svg{display:block;width:100%;height:100%}
+.bud .l3{margin-top:8px}
+.bud .l3 .btn{text-align:left;line-height:1.3;padding-top:7px;padding-bottom:7px}
+.fm-per .fm-cero{grid-column:1/-1;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+.fm-trae .seg{margin-top:4px}
+.fm-trae .note{margin:8px 0 0}
+.dv-verif{margin:4px 0 8px;font-family:var(--f-mono);font-size:26px;font-weight:500;letter-spacing:.08em;color:var(--ink);font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{border:1px solid var(--hueco-borde);background:var(--vidrio-2);color:var(--ink-2);border-radius:999px;padding:7px 13px;font-size:13.5px;cursor:pointer;font-family:inherit}
+.chips button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft);color:var(--acc);font-weight:500}
+.chip{border:1px solid var(--hueco-borde);background:var(--vidrio-2);color:var(--ink-2);border-radius:999px;padding:7px 14px;font-size:13.5px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.chip[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft);color:var(--acc);font-weight:500}
+.previo.rinde{margin-top:10px;grid-template-columns:minmax(0,1fr) minmax(130px,200px)}
+.previo.rinde select{min-width:0}
+@media (max-width:520px){ .previo.rinde{grid-template-columns:1fr} }
+.rinde-res{margin:10px 0 0}
+.aviso-lleno{margin-bottom:14px;border-color:var(--warn)}
+.aviso-lleno h2{color:var(--warn)}
+.aviso-lleno .card-head{margin-bottom:2px}
+.aviso-lleno.grave{border-color:var(--out);border-width:2px}
+.aviso-lleno.grave h2{color:var(--out)}
+/* ---- el interruptor "Rinde" ----
+   El mismo control en los tres lugares donde se dice dónde está la plata: al
+   crear la meta, adentro de la meta (lo que ya tenías) y en cada aporte.
+   Prendido, aparecen tus cuentas como botones y se toca la que es. */
+.rctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-width:0}
+.rctl .rsw{margin-top:0;font-size:14px;font-weight:500;color:var(--ink-2)}
+.rctl.on .rsw{color:var(--acc)}
+.rctl .rsw:disabled{opacity:.55;cursor:default}
+.rchips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.rchip{padding:6px 11px;font-size:13px}
+.rchip small{font-family:var(--f-mono);font-size:11px;opacity:.8;margin-left:3px}
+.rchip:disabled{opacity:.6;cursor:default}
+.rnota{font-size:12px;color:var(--ink-3);line-height:1.35}
+.linkbtn{background:none;border:0;padding:2px 0;color:var(--acc);font:inherit;font-size:13px;font-weight:500;
+  cursor:pointer;justify-self:start;align-self:flex-start;text-align:left}
+.linkbtn:hover{text-decoration:underline}
+/* Un renglón por lugar: la etiqueta arriba y, abajo, la casilla con su × al
+   lado. La casilla tiene un ancho tope, así la × queda pegada a SU casilla y no
+   perdida en la otra punta de la pantalla, y entre renglón y renglón hay aire
+   suficiente para que no se lea la etiqueta de abajo como si fuera de la casilla
+   de arriba. */
+.refec{display:grid;grid-template-columns:minmax(0,230px) 32px;column-gap:6px;row-gap:6px;align-items:center}
+.refec .lab{grid-column:1/-1;margin:0}
+.refec .iconbtn{justify-self:start}
+.donde-nueva{gap:14px}
+.donde-nueva > .lab{margin-bottom:-6px}
+.donde-nueva .pista{margin-top:-4px}
+.previo.donde{grid-template-columns:1fr;gap:14px}
+.rleg{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)}
+/* Repartido en varias cuentas: un renglón por cuenta. La primera se queda con
+   "lo que queda", así el total nunca cambia; las otras llevan su monto. */
+.rotras{display:grid;gap:16px}
+.rotras:empty{display:none}
+.refec .resto-v{font-family:var(--f-mono);font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums;
+  white-space:nowrap}
+.refec .resto-v small{font-family:var(--f-body);font-size:11.5px;color:var(--ink-3);margin-left:4px}
+.rnota.pie{display:block;margin-top:1px}
+/* Lo que ya tenías, repartido en varios lugares: un renglón por lugar. */
+.previo.rinde.repartido{grid-template-columns:1fr}
+.partes{display:grid;gap:8px;margin-top:8px}
+.parte{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) 30px;gap:10px;align-items:center}
+.parte select{min-width:0}
+.parte .pctin.plata input[readonly]{padding-left:8px}
+.partes .padd{justify-self:start}
+/* En el teléfono el lugar no entra al lado del monto ("Mercado Pago · rinde
+   19,63%" es largo): cada parte ocupa dos renglones, monto arriba y lugar abajo. */
+@media (max-width:460px){
+  .partes{gap:12px}
+  .parte{grid-template-columns:minmax(0,1fr) 30px;row-gap:6px}
+  .parte select{grid-column:1/-1;grid-row:2}
+  .parte + .parte{padding-top:12px;border-top:1px dashed var(--line)}
+}
+/* "Esta plata es de otro mes": la recomendación va adentro del formulario, en
+   el lugar de los botones, con el color de las metas. */
+.preg-ap{padding:12px 13px;border-radius:12px;background:var(--meta-soft);border:1px solid var(--hueco-borde)}
+.preg-ap p{margin:0 0 10px;font-size:13.5px;line-height:1.45;color:var(--ink)}
+.preg-ap .rowflex{gap:8px}
+.preg-ap .preg-no{border-color:transparent;background:none;color:var(--ink-3)}
+.datebtn:disabled,.seg button:disabled{opacity:.6;cursor:default}
+.row.propuesta{opacity:.92}
+.row.propuesta .mark{background:var(--surface-2);color:var(--ink-3)}
+.row .t{min-width:0}
+.row .t b{display:block;font-weight:500;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t small{color:var(--ink-3);font-size:12px}
+.row .amt{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap;text-align:right}
+.row .amt.in{color:var(--in)} .row .amt.out{color:var(--out)}
+.row .amt.neu{color:var(--ink-2)}
+.row.pend .mark{opacity:.5}
+.row.pend .t b{color:var(--ink-2)}
+.row .acts{display:flex;gap:4px;align-items:center}
+.iconbtn{background:none;border:0;cursor:pointer;color:var(--ink-3);padding:5px;border-radius:7px;line-height:0}
+.iconbtn:hover{background:var(--surface-2);color:var(--out)}
+.iconbtn svg{width:15px;height:15px}
+#catFiltro{width:auto;flex:1 1 150px;min-width:0;max-width:240px}
+#catFiltro.on{border-color:var(--acc);color:var(--acc);font-weight:500}
+/* v289: filtro por medio de pago y su resumen */
+#medFiltro{width:auto;flex:1 1 150px;min-width:0;max-width:240px}
+#medFiltro.on{border-color:var(--acc);color:var(--acc);font-weight:500}
+.medres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px;padding:12px;border-radius:14px;background:var(--hueco);border:1px solid var(--hueco-borde)}
+.medres div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.medres small{font:500 10.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.medres b{font-family:var(--f-mono);font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.medres b.in{color:var(--in)}.medres b.out{color:var(--out)}
+.medres p{grid-column:1/-1;margin:4px 0 0;font-size:12.5px;color:var(--ink-3);line-height:1.4}
+.confirm{color:var(--out);font-family:var(--f-mono);font-size:11px;border:1px solid var(--out);background:none;border-radius:7px;padding:4px 7px;cursor:pointer}
+
+.empty{text-align:center;padding:26px 10px;color:var(--ink-3);font-size:13.5px}
+.empty svg{width:26px;height:26px;opacity:.5;margin-bottom:6px}

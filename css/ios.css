@@ -1,0 +1,48 @@
+/* Cuentas Claras · css/ios.css
+   Ajustes para cuando se instala como app en un iPhone (la barra de estado y el indicador de inicio). */
+
+/* --------------------------------------------------------------------
+   Ajustes para correr como app instalada en iOS. La app fue pensada para
+   un WebView a pantalla completa y no maneja safe areas: sin esto, el
+   encabezado queda abajo de la barra de estado (la hora y la señal).
+
+   A diferencia de la versión de Scriptable, acá NO hay un número fijo:
+   env(safe-area-inset-top) se lo pregunta al sistema, así que sale bien
+   en cualquier iPhone sin que tengamos que calibrar a ojo.
+   -------------------------------------------------------------------- */
+:root {
+  --tope: calc(env(safe-area-inset-top, 0px) + 8px);
+}
+
+body { padding-top: var(--tope) !important; }
+
+/* .topbar es sticky con top:0. Sin esto se vería bien al abrir, pero al
+   scrollear se estacionaría de nuevo abajo de la barra de estado. */
+.topbar { top: var(--tope) !important; }
+
+/* .app pide min-height:100vh. Sumado al padding daría de más y aparecería
+   un scroll fantasma con la página quieta. */
+.app { min-height: calc(100vh - var(--tope)) !important; }
+
+/* El padding corre el contenido, pero esa franja sigue siendo página: al
+   scrollear se ve todo pasando por detrás. Esta banda opaca la tapa.
+   z-index 25 la deja arriba de .topbar (20) y debajo de .tabs (30) y de
+   los diálogos (60 en adelante). Usa var(--ground) para acompañar el tema
+   claro y el oscuro sola. */
+body::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: var(--tope) !important;
+  background: var(--ground) !important;
+  z-index: 25 !important;
+}
+
+/* Abajo: .tabs se agranda sola con el indicador de inicio (ya usa
+   env(safe-area-inset-bottom) en su padding), pero .content reservaba
+   96px fijos sin contar ese extra, así que tapaba la última fila. */
+.content {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px) + 24px) !important;
+}

@@ -1,0 +1,208 @@
+/* Cuentas Claras · css/estructura.css
+   El armazón de la página: barra de arriba, menú lateral en la compu y barra de abajo en el celular. */
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:1fr;min-height:100vh}
+.rail{display:none}
+.main{min-width:0;display:flex;flex-direction:column}
+
+.topbar{
+  position:sticky;top:0;z-index:20;background:var(--vidrio-barra);
+  -webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur);
+  border-bottom:1px solid var(--vidrio-borde);
+  display:flex;align-items:center;gap:14px;padding:12px 18px;flex-wrap:nowrap;
+}
+/* v291: el mes nunca baja a otro renglón. Si no entra al lado del nombre, el mes
+   se escribe más corto ("Nov 2026", y si hace falta "nov 26"). Lo decide
+   ajustarTopbar() midiendo de verdad, así anda con cualquier tamaño de letra. */
+.topbar .brand b{white-space:nowrap;display:block;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.month .lab-md{display:none;min-width:84px}
+.topbar.corto .month .lab{display:none}
+.topbar.corto .month .lab-md{display:block}
+.topbar.mini .month .lab, .topbar.mini .month .lab-md{display:none}
+.topbar.mini .month .lab-sm{display:block;min-width:0;padding:0 4px}
+.topbar.mini .brand b{font-size:17px}
+
+.brand{display:flex;align-items:baseline;gap:9px;margin-right:auto;min-width:0}
+/* v233: el ícono de la app, en chiquito, al lado del nombre */
+.brand .marca{flex:none;align-self:center;width:26px;height:26px;border-radius:8px;background:var(--marca);display:flex;flex-direction:column;
+  justify-content:center;gap:3px;padding:0 6px;box-sizing:border-box;box-shadow:inset 0 0 0 1px var(--marca-borde)}
+.brand .marca i{display:block;height:3.5px;border-radius:9px;background:#74ACDF}
+.brand .marca i:nth-child(2){width:66%;background:#fff}
+.brand .marca i:nth-child(3){width:38.5%}
+.brand b{font-family:var(--f-disp);font-weight:600;font-size:21px;letter-spacing:-.015em}
+.brand span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+
+.hdr-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:nowrap;min-width:0}
+.month{position:relative;display:flex;align-items:center;gap:1px;background:var(--vidrio);border:1px solid var(--vidrio-borde);
+  -webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur);border-radius:999px;padding:3px;flex:none}
+.month button[data-mes]{background:none;border:0;cursor:pointer;color:var(--ink-2);width:26px;height:26px;border-radius:999px;font-size:15px;line-height:1;flex:none}
+.month button[data-mes]:hover{background:var(--surface-2);color:var(--ink)}
+.mesbtn{background:none;border:0;cursor:pointer;color:inherit;font-family:inherit;padding:4px 2px;border-radius:999px;
+  display:flex;align-items:center;min-width:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#mesInput{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;padding:0;border:0;min-width:0}
+.mesbtn:hover{background:var(--surface-2)}
+.mesbtn[aria-expanded="true"]{background:var(--surface-2)}
+.month .lab{min-width:104px;padding:0 2px;text-align:center;font-weight:600;font-size:13px;letter-spacing:-.01em;text-transform:capitalize;white-space:nowrap}
+@media (max-width:519px){ .topbar .brand span{display:none} .topbar .brand b{font-size:19px} }
+@media (max-width:379px){ .topbar .brand b{font-size:17px} }
+.month .lab-sm{display:none;min-width:74px}
+@media (max-width:339px){
+  .month .lab{display:none}
+  .month .lab-sm{display:block;font-size:12.5px}
+}
+@media (max-width:359px){ .month .lab{min-width:96px;font-size:12.5px} }
+@media (min-width:520px){
+  .month button[data-mes]{width:29px;height:29px;font-size:16px}
+  .month .lab{min-width:126px;font-size:14px;letter-spacing:0}
+}
+
+.content{padding:22px 18px 96px;max-width:1120px;width:100%;margin:0 auto}
+.view{display:none}
+.view.on{display:block}
+
+/* ---------- bottom nav (mobile) ---------- */
+.tabs{
+  position:fixed;bottom:0;left:0;right:0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr) 58px repeat(3,1fr);
+  background:var(--vidrio-barra);
+  -webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur);
+  border-top:1px solid var(--vidrio-borde);padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+.tabs button{background:none;border:0;cursor:pointer;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-3);border-radius:10px}
+.tabs button .ico{width:20px;height:20px;display:block}
+.tabs button small{font-size:10px;letter-spacing:0;white-space:nowrap}
+@media (max-width:359px){ .tabs button small{font-size:8.5px} .tabs button .ico{width:18px;height:18px} }
+.tabs button[aria-current="true"]{color:var(--acc)}
+/* el "+" sobresale de la barra para que se vea de entrada */
+.tabs button.fab{position:relative;padding:0}
+.tabs button.fab span{position:absolute;left:50%;top:-16px;transform:translateX(-50%);
+  width:50px;height:50px;border-radius:50%;display:grid;place-items:center;
+  background:var(--fab);color:var(--fab-ink);box-shadow:0 4px 14px rgba(0,0,0,.22);border:3px solid var(--surface)}
+.tabs button.fab svg{width:24px;height:24px}
+/* En reposo el "+" usa el mismo color que los botones principales de la app
+   (`.btn`): oscuro con el signo claro, o al revés en modo oscuro. Es el elemento
+   más fuerte de la barra y, sobre todo, no es ninguno de los tres colores de
+   carga, así que se distingue de "estoy en Ingreso". Cuando entrás a cargar,
+   toma el color de la solapa y el signo pasa a blanco. */
+.tabs button.fab span{transition:background .18s ease, transform .12s ease}
+.tabs button.fab[data-tono] span{color:#fff}
+.tabs button.fab[data-tono="gasto"] span{background:var(--out)}
+.tabs button.fab[data-tono="ingreso"] span{background:var(--fab-verde)}
+.tabs button.fab[data-tono="cuotas"] span{background:var(--fab-gris)}
+.tabs button.fab[data-tono="viaje"] span{background:var(--meta)}
+/* el viaje activo, como cuarta opción del "+": un renglón propio a lo ancho */
+/* v200: cargar diciéndolo. El micrófono va en verde (es para sumar algo); mientras
+   escucha se pone rojo y late, como cualquier grabador. Lo que entendí va en
+   una caja hundida, y los campos que llené quedan marcados hasta que los tocás. */
+.voz{margin:0 0 14px;display:flex;flex-direction:column;gap:10px}
+.voz.vacia{display:none}
+.voz-vivo{margin:0;padding:10px 12px;border-radius:12px;background:var(--hueco);border:1px dashed var(--out);font-size:14px;color:var(--ink-2)}
+.voz-vivo[hidden]{display:none}
+.voz .voz-tip{margin:0}
+.voz .voz-res{margin-top:0}
+/* el botón de dictar queda siempre a la derecha del título, del mismo ancho diga "Dictar" o "Te escucho" */
+#v-cargar .card-head{flex-wrap:nowrap}
+#v-cargar .card-head > div:nth-of-type(1){flex:1 1 0}
+/* v222: sólo el micrófono, sin "Dictar" */
+#vozMic{width:40px;height:40px;padding:0;border-radius:50%;justify-content:center}
+#vozMic svg{width:19px;height:19px}
+.voz[hidden]{display:none}
+.voz-fila{display:flex;gap:8px;align-items:center;min-width:0}
+.voz-fila input{flex:1;min-width:0}
+.voz-fila .btn{flex:none;min-height:var(--ctl)}
+.voz-mic{flex:none;height:36px;padding:0 14px 0 11px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:13.5px;font-weight:550;border:1px solid var(--hueco-borde);background:var(--vidrio-2);
+  color:var(--acc);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0 14px 0 11px;white-space:nowrap}
+.voz-mic[hidden]{display:none!important}
+.voz-mic svg{width:18px;height:18px;flex:none}
+.voz-mic:hover{border-color:var(--acc)}
+.voz-mic[aria-pressed="true"]{background:var(--out);border-color:var(--out);color:#fff;animation:vozlatido 1.3s ease-in-out infinite}
+@keyframes vozlatido{50%{box-shadow:0 0 0 7px var(--t-out)}}
+.voz-res{margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--hueco);border:1px solid var(--hueco-borde)}
+.voz-res[hidden]{display:none}
+.voz-dijo{font-size:13px;color:var(--ink-2);font-style:italic;margin:0 0 9px;overflow-wrap:anywhere}
+.voz-chips{display:flex;flex-wrap:wrap;gap:6px}
+.voz-chips span{font-size:12.5px;line-height:1.3;border-radius:999px;padding:4px 10px;background:var(--surface);border:1px solid var(--line);color:var(--ink);max-width:100%;overflow-wrap:anywhere}
+.voz-chips span.g{color:var(--out);background:var(--out-soft);border-color:transparent;font-weight:600}
+.voz-chips span.i{color:var(--in);background:var(--in-soft);border-color:transparent;font-weight:600}
+.voz-chips span.q{color:var(--cuota);background:var(--cuota-soft);border-color:transparent;font-weight:600}
+.voz-chips span.falta{color:var(--warn);border-color:var(--warn);background:none}
+.voz-chips small{color:var(--ink-3);font-size:11.5px}
+.voz-pie{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin-top:9px}
+.voz-pie .note{margin:0;flex:1 1 200px}
+.voz-lleno{box-shadow:0 0 0 2px var(--acc)!important;border-color:var(--acc)!important}
+#segCarga.con-viaje{display:grid;grid-template-columns:repeat(3,1fr)}
+#segCarga [data-v="viaje"]{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:7px;min-width:0}
+#segCarga [data-v="viaje"] svg{width:16px;height:16px;flex:none}
+#segCarga [data-v="viaje"] span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.seg.tone button[aria-pressed="true"][data-v="viaje"]{background:var(--meta-soft);color:var(--meta)}
+#cargaViaje .vj-cual{margin-bottom:12px}
+.tabs button.fab:active span{transform:translateX(-50%) scale(.94)}
+/* v201: mantener apretado el "+" para dictar. Mientras te escucho, el "+" se
+   vuelve un micrófono rojo que late, igual que el de la carga. */
+.tabs button.fab{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+/* v216: un micrófono chiquito en la esquina del "+" avisa que también se dicta */
+.tabs button.fab .fab-badge{position:absolute;right:-6px;bottom:-5px;width:21px;height:21px;border-radius:50%;
+  display:grid;place-items:center;background:var(--acc);color:#fff;border:2px solid var(--surface);box-sizing:border-box}
+.tabs button.fab .fab-badge svg{width:11px;height:11px}
+.tabs button.fab .fab-badge[hidden],.tabs button.fab.oyendo .fab-badge{display:none}
+#vozPista{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:65;
+  width:min(330px, calc(100vw - 32px));box-sizing:border-box;display:grid;grid-template-columns:auto 1fr;gap:4px 11px;align-items:start;
+  padding:12px 14px;border-radius:14px;background:var(--ink);color:var(--ground);box-shadow:0 10px 30px rgba(0,0,0,.28);
+  animation:vpEntra .28s cubic-bezier(.2,.8,.2,1)}
+#vozPista[hidden]{display:none}
+#vozPista::after{content:"";position:absolute;left:50%;bottom:-7px;width:14px;height:14px;margin-left:-7px;background:inherit;transform:rotate(45deg);border-radius:2px}
+#vozPista .vp-ico{width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;margin-top:1px}
+#vozPista .vp-ico svg{width:15px;height:15px}
+#vozPista .vp-txt{font-size:13px;line-height:1.38;opacity:.92}
+#vozPista .vp-txt b{display:block;font-size:14px;font-weight:600;margin-bottom:2px;opacity:1}
+#vozPista .vp-x{grid-column:2;justify-self:end;margin-top:4px;background:none;border:0;color:inherit;font:inherit;font-size:13px;font-weight:600;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 0}
+@keyframes vpEntra{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (min-width:920px){ #vozPista{display:none!important} }
+.voz-tip{margin:8px 0 0}
+/* v217: el + y el micrófono están uno encima del otro. Al empezar a escuchar el
+   + gira y se achica hasta desaparecer y el micrófono crece en su lugar; al
+   terminar, al revés. Mientras lo mantenés apretado, un anillo se va llenando
+   alrededor: cuando se completa, empieza a escuchar. */
+.tabs button.fab .fab-mas,.tabs button.fab .fab-mic{grid-area:1/1;transition:transform .26s cubic-bezier(.3,.7,.2,1),opacity .2s ease}
+.tabs button.fab .fab-mic{opacity:0;transform:scale(.35) rotate(-30deg)}
+.tabs button.fab.oyendo .fab-mas{opacity:0;transform:rotate(90deg) scale(.3)}
+.tabs button.fab.oyendo .fab-mic{opacity:1;transform:none;transition-delay:.06s}
+.tabs button.fab .fab-anillo{position:absolute;inset:-9px;width:auto;height:auto;pointer-events:none;transform:rotate(-90deg);overflow:visible}
+.tabs button.fab .fab-anillo circle{fill:none;stroke:var(--out);stroke-width:3.2;stroke-linecap:round;stroke-dasharray:188.5;stroke-dashoffset:188.5;opacity:0;transition:opacity .12s ease}
+.tabs button.fab.carga .fab-anillo circle{opacity:1;stroke-dashoffset:0;transition:stroke-dashoffset .4s linear,opacity .08s ease}
+.tabs button.fab.oyendo .fab-anillo{display:none}
+@media (prefers-reduced-motion: reduce){ .tabs button.fab .fab-anillo{display:none} }
+.tabs button.fab.oyendo span{background:var(--out);color:#fff;animation:fablatido 1.2s ease-in-out infinite}
+@keyframes fablatido{0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.22),0 0 0 0 var(--t-out)}50%{box-shadow:0 4px 14px rgba(0,0,0,.22),0 0 0 10px var(--t-out)}}
+.iconbtn.mas{color:var(--acc);border:1px solid var(--acc);padding:7px}
+.iconbtn.mas:hover{background:var(--acc-soft);color:var(--acc)}
+.iconbtn.mas svg{width:17px;height:17px}
+.rows .row.editable{cursor:pointer;border-radius:10px}
+.bud.editable{cursor:pointer;border-radius:10px;padding-left:6px;padding-right:6px;margin-left:-6px;margin-right:-6px}
+.bud.editable:hover{background:var(--surface-2)}
+.rows .row.editable:hover{background:var(--surface-2)}
+
+
+@media (min-width:920px){
+  .app{grid-template-columns:224px 1fr}
+  .tabs{display:none}
+  .rail{display:flex;flex-direction:column;gap:4px;padding:18px 12px;border-right:1px solid var(--vidrio-borde);
+    background:var(--vidrio-2);-webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur);
+    position:sticky;top:0;height:100vh}
+  .rail .brand{margin:6px 10px 20px;display:grid;grid-template-columns:auto 1fr;column-gap:10px;row-gap:1px;align-items:center}
+  .rail .brand .marca{grid-row:1 / span 2;width:34px;height:34px;border-radius:10px;gap:4px;padding:0 8px}
+  .rail .brand .marca i{height:4.5px}
+  .rail a{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;text-decoration:none;color:var(--ink-2);font-weight:500;font-size:14.5px;cursor:pointer}
+  .rail a .ico{width:18px;height:18px}
+  .rail a:hover{background:var(--surface-2);color:var(--ink)}
+  .rail a[aria-current="true"]{background:var(--acc-soft);color:var(--acc);font-weight:600}
+  /* v222: "Cargar" es un botón (relleno, como los botones principales), no un
+     renglón más: así no se confunde con la sección en la que estás, que es la
+     única que va en verde. Estando en Cargar, lleva un anillo. */
+  .rail a.railcargar{background:var(--fab);color:var(--fab-ink);font-weight:600;justify-content:center;margin:0 0 12px;padding:10px 11px;border-radius:11px}
+  .rail a.railcargar:hover{background:var(--fab);color:var(--fab-ink);opacity:.88}
+  .rail a.railcargar[aria-current="true"]{background:var(--fab);color:var(--fab-ink);box-shadow:0 0 0 2px var(--ground),0 0 0 4px var(--fab)}
+  .topbar .brand{display:none}
+  .content{padding:26px 30px 60px}
+}

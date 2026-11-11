@@ -1,0 +1,587 @@
+/* Cuentas Claras · css/pantallas.css
+   Estilos propios de cada pantalla: calendario, viajes, grupo, calculadoras, ajustes… */
+
+/* ---------- el calendario del mes ----------
+   Cada día se pinta con los colores de los grupos en los que gastaste ese día.
+   El relleno va suave —el número tiene que seguir leyéndose— y abajo queda una
+   tira con los mismos colores a full, que es la que se ve de un vistazo cuando
+   dos días tienen tonos parecidos. Las franjas son proporcionales: el grupo en
+   el que más gastaste ocupa más. */
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.caldia{position:relative;min-height:38px;aspect-ratio:1/1;border:1px solid var(--line);border-radius:11px;
+  background:var(--vidrio-2);display:grid;place-items:center;padding:0;overflow:hidden;
+  font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+button.caldia{cursor:pointer}
+button.caldia:hover{border-color:var(--line-strong)}
+.caldia.vacio{border-style:dashed;color:var(--ink-3);opacity:.75}
+/* El marco verde marca los días en que ENTRÓ plata. Va en el borde y no en el
+   relleno porque el relleno ya está ocupado por los grupos de gasto: así un día
+   en que cobraste y además gastaste se ve entero, el marco y las franjas. */
+.caldia.entro{border-width:2px;border-color:var(--in)}
+/* v199: el marco azul, los días en que guardaste plata en una meta. Si ese día
+   además entró plata, mitad y mitad: verde arriba a la izquierda y azul abajo a
+   la derecha. Se hace con los colores de cada lado del borde (el corte cae en
+   diagonal en las esquinas), así anda hasta en los WebView viejos. */
+.caldia.guardo{border-width:2px;border-color:var(--meta)}
+.caldia.entro.guardo{border-color:var(--in) var(--meta) var(--meta) var(--in)}
+/* HOY, además del anillo de adentro, lleva un resplandor POR FUERA del borde.
+   El anillo solo se perdía justo en los días que más miro: si el día está
+   pintado con las franjas de los grupos, o lleva el marco verde de un ingreso,
+   adentro ya no queda lugar para otra marca. Afuera no compite con ninguna de
+   las dos. Los cuadraditos se dibujan en orden, así que el de hoy sube con
+   z-index: si no, el día siguiente le tapaba la mitad del resplandor. */
+.caldia.hoy{box-shadow:inset 0 0 0 2px var(--ink-3), 0 0 5px 1px var(--hoy-luz), 0 0 14px 5px var(--hoy-luz-2);z-index:2}
+.caldia.entro.hoy{box-shadow:inset 0 0 0 2px var(--ink-3), 0 0 5px 1px var(--hoy-luz), 0 0 14px 5px var(--hoy-luz-2)}
+.caldia.futuro{opacity:.62}
+.caldia .n{position:relative;z-index:1}
+/* La tira de colores va DESPEGADA del borde: pegada a los lados tapaba el marco
+   verde de un ingreso y el anillo de hoy justo en las esquinas de abajo, y desde
+   afuera parecía que el marco pasaba por detrás de la tira. Con 3 px de aire y
+   las puntas redondeadas, el marco se ve entero y la tira flota adentro. */
+.caldia .tira{position:absolute;left:4px;right:4px;bottom:3px;height:6px;border-radius:3px;
+  background-repeat:no-repeat;background-size:calc(100% + 8px) 100%;background-position:-4px 0}
+/* Los cortes de la tira tienen que caer EXACTO donde caen los del fondo del día:
+   son las mismas proporciones, pero la tira es 8 px más angosta que el cuadrito,
+   así que dibujadas cada una a su ancho el corte quedaba corrido unos píxeles y
+   parecía que la franja de abajo no medía lo mismo que el color de arriba. El
+   degradado se dibuja al ancho del cuadrito entero y se corre 4 px a la
+   izquierda: se ve sólo el pedazo de adentro, y los cortes coinciden. */
+@media (max-width:359px){ .caldia .tira{left:3px;right:3px;bottom:2px;height:5px;
+  background-size:calc(100% + 6px) 100%;background-position:-3px 0} }
+.caldia .hueco{visibility:hidden}
+@media (max-width:359px){ .caldia{font-size:11.5px;min-height:32px} .calgrid{gap:3px} }
+
+#tip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--ground);font-size:12px;
+  padding:6px 9px;border-radius:8px;opacity:0;transition:opacity .12s;max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#tip.on{opacity:1}
+
+/* toast
+   v277: el cartel va ARRIBA. En el iPhone, después de cargar un gasto el foco
+   vuelve al monto y el teclado tapaba el cartel de abajo. Es de vidrio, como los
+   globitos, y lleva un ícono: tilde verde cuando algo salió bien, signo de
+   admiración cuando falta algo, y una "i" para el resto. */
+#toast{position:fixed;left:50%;top:calc(var(--vvt,0px) + env(safe-area-inset-top,0px) + 10px);z-index:95;
+  transform:translate(-50%,-14px) scale(.97);opacity:0;pointer-events:none;
+  display:flex;align-items:center;gap:11px;width:max-content;max-width:min(calc(100vw - 24px),440px);
+  padding:10px 16px 10px 10px;border-radius:16px;font-size:14px;line-height:1.35;color:var(--ink);text-align:left;
+  background:var(--vidrio-pop);border:1px solid var(--vidrio-borde);
+  -webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur);
+  box-shadow:0 14px 40px -12px rgba(0,0,0,.40),0 2px 8px rgba(0,0,0,.08),inset 0 1px 0 var(--brillo);
+  transition:opacity .2s ease,transform .32s cubic-bezier(.2,.9,.25,1.15)}
+#toast.on{opacity:1;transform:translate(-50%,0) scale(1)}
+#toast > span{flex:1 1 auto;min-width:0}
+#toast .toast-ico{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--acc);
+  box-shadow:0 3px 10px -3px var(--acc)}
+#toast .toast-ico svg{width:17px;height:17px}
+#toast.ok .toast-ico{background:var(--in);box-shadow:0 3px 10px -3px var(--in)}
+#toast.err .toast-ico{background:var(--warn);box-shadow:0 3px 10px -3px var(--warn)}
+#toast.ok .toast-ico svg path{stroke-dasharray:24;stroke-dashoffset:24}
+#toast.ok.on .toast-ico svg path{animation:tildeOk .42s .12s ease-out forwards}
+@keyframes tildeOk{to{stroke-dashoffset:0}}
+#toast.conacc{flex-wrap:wrap;gap:9px 11px;padding:9px 9px 9px 10px}
+#toast.conacc .toast-btn{margin-left:auto}
+.toast-btn{
+  pointer-events:auto;flex:none;background:var(--btn);color:var(--btn-ink);border:0;
+  border-radius:9px;padding:7px 12px;font-family:inherit;font-size:12.5px;font-weight:600;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.toast-btn:hover{filter:brightness(.94)}
+.toast-btn:active{transform:translateY(1px)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #toast{background:var(--surface);border-color:var(--line)}
+}
+@media (prefers-reduced-motion: reduce){ #toast,#toast.on{transform:translate(-50%,0)} }
+
+.note{font-size:12.5px;color:var(--ink-3);line-height:1.45}
+.hr{height:1px;background:var(--line);margin:14px 0}
+.stack{display:flex;flex-direction:column;gap:14px}
+.rowflex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.tabular{font-variant-numeric:tabular-nums}
+.scrollx{overflow-x:auto}
+
+/* gastos de viaje */
+.vj-pegar{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.vj-pegar summary{cursor:pointer;font-size:13.5px;color:var(--ink-2);padding:4px 0;list-style-position:inside}
+.vj-pegar[open] summary{margin-bottom:8px}
+.vj-pegar textarea,.vj-caja textarea{width:100%;display:block;resize:vertical;font-size:13px;line-height:1.4}
+.vj-caja{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+.vj-caja textarea{font-family:var(--f-mono);font-size:12px;word-break:break-all}
+.vj-caja a.btn{text-decoration:none}
+.vj-qr{margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.vj-qr .note{margin:0;text-align:center;max-width:340px}
+.vj-qrsvg{display:block;width:min(100%,320px);height:auto;border-radius:10px;background:#fff}
+.vj-acciones{gap:8px;margin-top:2px}
+.vj-sync{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.vj-sync span{font-size:12.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink-2);background:var(--surface-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vj-sync span b{font-weight:600;color:var(--ink)}
+.vj-sync span.falta{border-color:var(--warn);color:var(--warn)}
+/* estado de la sincronización automática: un punto de color y una frase */
+.vj-auto{display:flex;align-items:flex-start;gap:8px;margin:0 0 12px;font-size:13px;line-height:1.4;color:var(--ink-2)}
+.vj-auto i{flex:none;width:8px;height:8px;margin-top:5px;border-radius:50%;background:var(--ink-3)}
+.vj-auto.ok i{background:var(--in)}
+.vj-auto.busca i{background:var(--warn);animation:vjlatido 1.2s ease-in-out infinite}
+.vj-auto.off i{background:var(--out)}
+@keyframes vjlatido{50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.vj-auto.busca i{animation:none}}
+.vj-quien{margin-top:6px}
+/* quiénes están en el viaje y desde cuándo */
+.vj-gente{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.vj-gente > .lab{margin-bottom:2px}
+.vj-per{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.vj-gente > .lab + .vj-per{border-top:0}
+.vj-per-n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vj-per-n b{font-weight:600}
+.vj-per-n i{font-style:normal;font-size:12px;color:var(--ink-3);margin-left:6px}
+.vj-per small{grid-column:1/-1;font-size:12.5px;color:var(--ink-3);line-height:1.35}
+.vj-per small .falta{color:var(--warn)}
+.vj-per small .listo{color:var(--in)}
+.vj-term{color:var(--in);font-weight:600}
+.vj-listos{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.vj-listos span{font-size:12.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--hueco-borde);color:var(--ink-3);white-space:nowrap}
+.vj-listos span.si{border-color:var(--in);background:var(--in-soft);color:var(--in)}
+.vj-forzar{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.vj-fin{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.card.vj-tuparte.pide{border:2px solid var(--meta)}
+.vj-per .linkbtn{font-size:12.5px}
+.vj-per-ed{grid-column:1/-1;display:grid;gap:10px;margin-top:10px;padding:12px;border-radius:12px;background:var(--hueco);border:1px solid var(--hueco-borde)}
+.vj-desde{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vj-desde .datewrap{flex:0 1 200px;min-width:150px}
+.vj-desde-f{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;flex-basis:100%}
+.vj-alas{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-2)}
+.vj-desde input[type=time],.vj-cuando input[type=time]{height:var(--ctl);background:var(--hueco);border:1px solid var(--hueco-borde);
+  border-radius:11px;padding:0 10px;font-size:14.5px;color:var(--ink);font-family:var(--f-mono);box-sizing:border-box;min-width:118px;width:auto}
+/* v209: fecha y hora (o entrada y salida) en dos columnas iguales, y abajo el
+   interruptor del alojamiento, explicado. Antes la fecha quedaba sola a la
+   izquierda y el botón y la hora pegados a la derecha. */
+.form2 > .field.vj-cuando{justify-content:flex-start;gap:10px}
+.vj-cuando-fila{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.vj-celda{display:flex;flex-direction:column;gap:5px;min-width:0}
+.vj-celda[hidden]{display:none}
+.vj-cuando .datewrap{width:100%}
+.form2.pairfecha .vj-cuando .datebtn,.vj-cuando .datebtn{width:100%;justify-content:flex-start;padding:0 12px}
+.vj-cuando input[type=time]{width:100%;min-width:0}
+.vj-noches{margin-top:2px;align-items:flex-start}
+.vj-noches .swi-t{margin-top:1px}
+.vj-noches .swi-x{display:flex;flex-direction:column;gap:2px;min-width:0}
+.vj-noches .swi-x b{font-weight:550;font-size:14px;color:var(--ink)}
+.vj-noches .swi-x small{font-size:12px;color:var(--ink-3);line-height:1.35}
+.vj-quien .field{max-width:420px}
+.vj-quien p{margin:0 0 10px;font-size:14px}
+.settle.vj-mio{background:var(--acc-soft);border-radius:10px;padding-left:10px;padding-right:10px;border-top-color:transparent}
+.settle.vj-mio + .settle{border-top-color:transparent}
+@media (max-width:520px){ .vj-tiles{grid-template-columns:1fr 1fr} }
+
+/* divisor de gastos */
+.splithead,.splitrow{display:grid;grid-template-columns:1fr 130px 30px;gap:10px;align-items:center}
+.splithead{padding:0 0 6px}
+.splitrow{padding:4px 0}
+.splitrow input{padding:0 9px}
+@media (max-width:520px){
+  .splithead,.splitrow{grid-template-columns:1fr 104px 28px;gap:8px}
+  .splitrow input{padding:0 7px;font-size:13.5px}
+}
+.settle{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:11px 2px;border-top:1px solid var(--line)}
+.settle:first-child{border-top:0}
+.settle .who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14.5px}
+.settle .who em{font-style:normal;font-weight:600}
+.settle .arrow{color:var(--ink-3)}
+.settle .amt2{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--out);white-space:nowrap}
+/* v249: en Dividir gastos, tildar a los que ya te pagaron */
+.settle .tick{width:26px;height:26px;flex:none;border-radius:50%;border:1.5px solid var(--line-strong);background:var(--surface);
+  display:grid;place-items:center;color:transparent;cursor:pointer;padding:0;transition:background .15s,border-color .15s}
+.settle .tick svg{width:15px;height:15px}
+.settle .tick[aria-pressed="true"]{background:var(--in);border-color:var(--in);color:#fff}
+.settle .tick:hover{border-color:var(--in)}
+.settle.pagado .amt2{text-decoration:line-through;color:var(--ink-3)}
+.settle .pago-ok{font-size:11.5px;font-weight:600;color:var(--in)}
+.split-suma{margin-top:12px;padding:11px 13px;border-radius:12px;background:var(--surface-2);font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+.split-suma b{color:var(--ink);font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.alloc{display:flex;height:16px;border-radius:5px;overflow:hidden;background:var(--surface-2);gap:2px}
+.alloc span{display:block;min-width:2px}
+.alloc .libre{background:repeating-linear-gradient(135deg,var(--surface-2),var(--surface-2) 5px,var(--line) 5px,var(--line) 7px)}
+.alloc-leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:9px;font-size:12.5px;color:var(--ink-2)}
+.alloc-leg span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.alloc-leg i{width:9px;height:9px;border-radius:3px;flex:none}
+.alloc-leg b{font-weight:600;font-variant-numeric:tabular-nums}
+.gdot{width:9px;height:9px;border-radius:3px;flex:none;display:inline-block}
+.grow{display:flex;align-items:center;gap:8px;min-width:0;position:relative}
+/* El puntito de color de cada grupo es un botón: abre la paleta. El punto se
+   queda del mismo tamaño de siempre —es una marca, no un bloque de color— y lo
+   que crece es el área que se puede tocar, que en un teléfono con 9 px no se
+   acierta nunca. */
+.gpick{width:26px;height:26px;border-radius:8px;border:0;background:none;padding:0;cursor:pointer;
+  display:grid;place-items:center;flex:none;margin-left:-4px}
+.gpick:hover{background:var(--surface-2)}
+.gpick[aria-expanded="true"]{background:var(--surface-2)}
+.gpick .gdot{width:13px;height:13px;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.16)}
+@media (max-width:359px){ .gpick{width:22px;height:22px;margin-left:-3px} }
+.paleta{position:absolute;z-index:70;top:calc(100% + 6px);left:0;
+  background:var(--vidrio-pop);border:1px solid var(--vidrio-borde);border-radius:16px;padding:10px;
+  -webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur);
+  box-shadow:0 10px 40px -10px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.08),inset 0 1px 0 var(--brillo);
+  width:max-content;max-width:min(272px,calc(100vw - 36px));
+  max-height:min(72vh,460px);overflow:auto;-webkit-overflow-scrolling:touch}
+.pal-tit{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 6px}
+.pal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pal-grid + .pal-tit{margin-top:12px}
+.pal-sw{width:30px;height:30px;border-radius:9px;border:0;padding:0;cursor:pointer;
+  display:grid;place-items:center;color:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.16)}
+.pal-sw svg{width:15px;height:15px}
+.pal-sw[aria-pressed="true"]{box-shadow:inset 0 0 0 1px rgba(0,0,0,.16),0 0 0 2px var(--surface),0 0 0 4px var(--ink-2)}
+/* Un puntito marca los colores que ya tiene otro grupo: se pueden elegir igual
+   —el color es tuyo—, pero conviene saberlo antes de tocar. */
+.pal-sw .usado{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.9);
+  box-shadow:0 0 0 1px rgba(0,0,0,.2);display:block}
+.pal-nuevo{width:100%;margin-top:12px}
+/* La rueda de color. Está dibujada en un canvas: el ángulo es el tono y la
+   distancia al centro, cuán intenso; el deslizador de abajo, cuán claro. Es
+   propia y no el selector del sistema porque adentro de un iframe de otro
+   origen ese no se puede abrir, y en el WebView de Android tampoco siempre. */
+.pal-rueda{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);display:grid;gap:9px;justify-items:center}
+.pal-rueda .pal-tit{justify-self:start;margin:0}
+.rueda-wrap{position:relative;width:150px;height:150px;touch-action:none}
+.rueda-wrap canvas{width:150px;height:150px;display:block;border-radius:50%;cursor:crosshair}
+.rueda-marca{position:absolute;width:15px;height:15px;border-radius:50%;border:2px solid #fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.45);transform:translate(-50%,-50%);pointer-events:none}
+.pal-fila{display:flex;align-items:center;gap:8px;width:100%}
+.pal-prev{width:32px;height:32px;border-radius:9px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.16)}
+.pal-hex{flex:1;min-width:0;font-family:var(--f-mono);text-transform:uppercase}
+.grow input{flex:1;min-width:0}
+.bud .gcats{font-size:12px;color:var(--ink-3);margin-top:2px}
+.catlist{display:grid;grid-template-columns:1fr;gap:2px}
+@media (min-width:680px){ .catlist{grid-template-columns:1fr 1fr;gap:2px 18px} }
+.catrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:4px 0}
+.catrow.congrupo{grid-template-columns:minmax(0,1fr) 128px auto}
+.catadd.congrupo{grid-template-columns:minmax(0,1fr) 128px auto}
+@media (max-width:520px){ .catrow.congrupo,.catadd.congrupo{grid-template-columns:minmax(0,1fr) 104px auto;gap:6px} }
+
+.gadd{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+@media (min-width:680px){ .gadd{grid-template-columns:minmax(0,320px) auto;justify-content:start} }
+.catadd{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+@media (min-width:680px){ .catadd{grid-template-columns:minmax(0,320px) auto;justify-content:start} .catadd.congrupo{grid-template-columns:minmax(0,320px) 128px auto} }
+/* La columna del % tiene que dar para "16,6667": cuando escribís el tope en
+   pesos, el porcentaje que sale casi nunca es redondo. */
+.pctrow{display:grid;grid-template-columns:minmax(0,1fr) 98px minmax(116px,150px) auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.pctrow:first-child{border-top:0}
+.pctrow .cat{font-size:14px}
+/* De los dos campos de cada fila, uno es el tope y el otro es su traducción. El
+   que manda va en tinta plena; el derivado, en gris, para que se vea de un
+   vistazo si ese grupo está atado a un porcentaje o clavado en pesos. */
+.pctrow.fijo .pctin:not(.plata) input{color:var(--ink-3)}
+.pctrow:not(.fijo) .pctin.plata input{color:var(--ink-3)}
+.pctrow.fijo .pctin.plata input,.pctrow:not(.fijo) .pctin:not(.plata) input{color:var(--ink);font-weight:500}
+/* El realce del campo que manda va en el INPUT, no en el `span` que lo
+   envuelve. El span abarca también el símbolo "$" y el espacio que lo separa,
+   así que un recuadro puesto ahí arrancaba a la izquierda del "$" y se veía
+   despegado de la casilla donde escribís. */
+.pctrow.fijo .pctin.plata input{border-color:var(--line-strong)}
+/* El anillo de foco, con 2 px de separación, se comía el "$" y el "%" que van
+   pegados al campo. Pegado al borde se ve igual de claro y no tapa el símbolo. */
+.pctin input:focus-visible{outline-offset:0}
+.pctin{display:flex;align-items:center;gap:6px}
+.combo > select{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;bottom:0;left:0}
+.lab-op{text-transform:none;letter-spacing:0;color:var(--ink-3);font-weight:400}
+.combo{position:relative}
+.combo > input{width:100%}
+.combo-pop{
+  position:absolute;z-index:70;top:calc(100% + 5px);left:0;
+  min-width:min(100%, 420px);width:max-content;max-width:min(420px, calc(100vw - 40px));
+  background:var(--vidrio-pop);border:1px solid var(--vidrio-borde);border-radius:16px;padding:5px;
+  -webkit-backdrop-filter:var(--vidrio-blur);backdrop-filter:var(--vidrio-blur);
+  box-shadow:0 10px 40px -10px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.08),inset 0 1px 0 var(--brillo);
+  max-height:262px;overflow:auto;-webkit-overflow-scrolling:touch;
+}
+.combo-g{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:9px 9px 4px}
+.combo-g:first-child{padding-top:4px}
+.combo-o{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;
+  background:none;border:0;cursor:pointer;text-align:left;color:var(--ink);
+  font-family:inherit;font-size:14px;padding:9px;border-radius:9px;
+}
+.combo-o b{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.combo-o i{font-style:normal;font-family:var(--f-mono);font-size:12px;color:var(--ink-3);flex:none;font-variant-numeric:tabular-nums}
+.combo-o mark{background:var(--acc-soft);color:var(--acc);border-radius:3px;padding:0 1px}
+.combo-o:hover,.combo-o.act{background:var(--surface-2)}
+.combo-o[aria-selected="true"] b{color:var(--acc);font-weight:600}
+.combo-nada{padding:10px 9px;font-size:13px;color:var(--ink-3);line-height:1.45}
+.pctin input{flex:1;min-width:0;text-align:right;padding:0 8px;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.pctin i{font-style:normal;color:var(--ink-3);font-size:12.5px}
+.pctin.plata i{order:-1;font-size:13px}
+.pctin.plata input{font-size:13px}
+.pctin.plata input:disabled{color:var(--ink-3);cursor:not-allowed}
+@media (max-width:520px){
+  .pctrow{grid-template-columns:minmax(0,1fr) 78px 100px auto;gap:6px}
+  .pctin input{font-size:12px;padding:0 4px}
+  .pctin i{font-size:12px}
+}
+@media (max-width:359px){
+  .pctrow{grid-template-columns:minmax(0,1fr) 72px 92px auto;gap:5px}
+  .pctin input{font-size:11.5px;padding:0 3px}
+  .pctin i{font-size:11px}
+}
+/* Hora y minutos del recordatorio: dos desplegables que se leen como un reloj. */
+.hora{display:flex;align-items:center;gap:6px}
+.hora select{flex:1;min-width:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:center}
+.hora i{font-style:normal;color:var(--ink-3);font-family:var(--f-mono)}
+.warn{color:var(--warn)}
+.tool{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+/* v289: herramientas favoritas */
+.tool-acc{display:flex;gap:8px;align-items:center}
+/* v289: gastos fijos */
+.tile.fqueda{display:block;height:auto;margin-bottom:14px}
+.cuenta3{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin-top:10px;font-size:13px;color:var(--ink-2)}
+.cuenta3 .v{font-family:var(--f-mono);text-align:right;white-space:nowrap}
+.cuenta3 .neg{color:var(--out)}
+.cuenta3 .tot{border-top:1px solid var(--line);padding-top:6px;margin-top:2px;font-weight:600;color:var(--ink)}
+.cuenta3 .v.tot{font-family:var(--f-mono)}
+.cuenta3 .det{grid-column:1/-1;font-size:12px;color:var(--ink-3);margin:-2px 0 4px;line-height:1.35}
+.tuparte{display:flex;align-items:baseline;gap:2px 8px;margin:4px 0 2px;flex-wrap:wrap}
+.tuparte b{white-space:nowrap;font-family:var(--f-mono);font-size:19px;color:var(--out);font-weight:500}
+.tuparte small{font-size:12.5px;color:var(--ink-3)}
+.estr{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:none;border:1px solid var(--line);color:var(--ink-3);flex:none;cursor:pointer;padding:0}
+.estr.on{color:#E9B53E;border-color:color-mix(in srgb,#E9B53E 45%,transparent);background:color-mix(in srgb,#E9B53E 12%,transparent)}
+.estr svg{width:19px;height:19px}
+.favs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fav{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:13px 12px;border-radius:14px;background:var(--hueco);border:1px solid var(--hueco-borde);color:inherit;font:inherit;text-align:left;min-height:92px;cursor:pointer}
+.fav i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--acc-soft);color:var(--acc)}
+.fav i svg{width:19px;height:19px}
+.fav b{font-size:13.5px;line-height:1.25;font-weight:600;overflow-wrap:anywhere}
+@media (max-width:340px){ .favs{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.tool:first-of-type{border-top:0;padding-top:2px}
+.tool b{font-weight:600;font-size:14.5px;display:block}
+/* la lista de pagos del mes: los fijos del mes para ir tachando */
+.pg-prog{margin:-2px 0 8px}
+.pg-prog i{background:var(--in)}
+.row.pg{padding-left:4px;padding-right:6px}
+.pgchk{width:26px;height:26px;border-radius:50%;border:1.6px solid var(--line-strong);background:transparent;
+  display:grid;place-items:center;color:transparent;padding:0}
+.pgchk svg{width:15px;height:15px}
+#cardPagos .card-head{align-items:center}
+.row.pg.hecho .pgchk{background:var(--in);border-color:var(--in);color:#fff}
+.row.pg.hecho .t b{text-decoration:line-through;text-decoration-thickness:1.5px;color:var(--ink-3)}
+.row.pg.hecho .amt{text-decoration:line-through;color:var(--ink-3)}
+/* v204: uno que tachás vos y ya venció: el círculo en ámbar, para que se note */
+.row.pg.vencido .pgchk{border-color:var(--warn)}
+.row.pg.vencido small{color:var(--warn)}
+/* v207: las monedas del viaje */
+.vj-monmas{display:inline-block;margin-top:6px;font-size:12.5px}
+.vj-mons{margin-top:-4px}
+.vj-mons[hidden]{display:none}
+.vj-mons .chips{margin-top:6px}
+#vjMonSeg[hidden]{display:none}
+/* v208: cada botón de moneda tan ancho como su símbolo ("CLP$" no entraba en
+   el ancho parejo); con dos monedas o más, los botones van abajo del monto, a
+   lo ancho, así el campo no queda chiquito */
+#vjMonSeg button{flex:1 0 auto;min-width:34px;padding:5px 7px}
+.vj-conmon.muchas{flex-wrap:wrap}
+.vj-conmon.muchas .money-in{flex:1 1 100%}
+.vj-conmon.muchas #vjMonSeg{flex:1 1 100%;display:flex}
+/* la confirmación de tachar a mano, en el mismo renglón */
+.row.pgconf{display:block;padding:12px 13px;margin:4px 0;border-radius:12px;background:var(--meta-soft);border:1px solid var(--hueco-borde)}
+.row.pgconf + .row{border-top-color:transparent}
+.row.pgconf p{margin:0 0 10px;font-size:13.5px;line-height:1.45;color:var(--ink)}
+.row.pgconf .rowflex{gap:8px}
+.tool .note{margin:4px 0 0}
+.hero{font-family:var(--f-body);font-weight:600;font-size:clamp(28px,6vw,40px);letter-spacing:-.025em;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--in)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px;align-items:baseline}
+.kv:first-child{border-top:0}
+/* v192: los números de las calculadoras van con la misma letra que los recuadros
+   del resumen (la del cuerpo, con cifras parejas), no con la de máquina de
+   escribir: se leen más rápido. */
+.kv b{font-family:var(--f-body);font-weight:600;font-size:15px;letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
+#sacFechas[hidden]{display:none}
+.calc-anotar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.calc-anotar .field{flex:1 1 180px;max-width:280px;min-width:0}
+.calc-anotar .btn{flex:none}
+.cyc-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:4px}
+.cyc-sub b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cyc-corte{margin-top:12px}
+.cyc-tiles .tile{padding:13px 15px 14px}
+.cyc-tiles .tile .tile-top{padding-right:0}
+@media (max-width:440px){ .cyc-tiles .tile .tico{display:none} .cyc-tiles .tile{padding:12px 13px 13px} }
+.cyc-cuotas{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
+.cyc-c{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--vidrio);min-width:0}
+.cyc-c span{font-size:11.5px;color:var(--ink-3)}
+.cyc-c i{font-style:normal;font-size:11px;color:var(--ink-3)}
+.cyc-c b{font-family:var(--f-body);font-weight:600;font-size:15px;letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hero-base{margin:8px 0 0;font-size:12.5px;color:var(--ink-3)}
+.hero-base b{color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums}
+.kv .k{color:var(--ink-2)}
+.kv .k small{display:block;color:var(--ink-3);font-size:11.5px;margin-top:2px}
+/* dos campos que van juntos sí o sí, sin depender de la grilla de afuera */
+.par{grid-column:1/-1;display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:end}
+/* calculadora de plazo fijo */
+#v-plazo.on{display:grid;gap:14px;align-items:start}
+#v-plazo > .card,
+#pfOut > .card{max-width:620px;width:100%}
+#pfOut{min-width:0}
+#pfOut:empty{display:none}
+/* las calculadoras: la misma columna que el plazo fijo */
+.calcv.on{display:grid;gap:14px;align-items:start}
+.calcv > .card,.calcv > div > .card{max-width:620px;width:100%}
+.calcv > div{min-width:0}
+.calcv > div:empty{display:none}
+.conv-res .hero{overflow-wrap:anywhere}
+/* v214: el conversor como un traductor */
+.conv-par{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);column-gap:8px;align-items:center}
+.conv-caja{grid-row:1;position:relative;display:flex;flex-direction:column;justify-content:center;gap:1px;min-width:0;
+  height:68px;padding:0 34px 0 14px;border-radius:12px;background:var(--hueco);border:1px solid var(--hueco-borde);box-sizing:border-box}
+.conv-pesos{grid-column:1;padding-right:14px}
+.conv-otra{grid-column:3;cursor:pointer}
+.conv-par.al-reves .conv-otra{grid-column:1}
+.conv-par.al-reves .conv-pesos{grid-column:3}
+.conv-swap{grid-row:1;grid-column:2}
+.conv-t{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.conv-pista{margin:6px 0 0;text-align:center;font-size:11.5px;color:var(--ink-3)}
+.conv-n{font-size:14.5px;font-weight:550;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-s{font-family:var(--f-mono);font-size:12px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-otra .conv-n{color:var(--acc)}
+.conv-car{position:absolute;right:10px;top:50%;width:18px;height:18px;margin-top:-9px;color:var(--acc);pointer-events:none}
+.conv-otra select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px;margin:0;border:0;padding:0;-webkit-appearance:none;appearance:none}
+.conv-otra:hover{border-color:var(--hueco-fuerte)}
+.conv-otra:focus-within{outline:2px solid var(--acc);outline-offset:1px}
+.conv-swap{width:40px;height:40px;border-radius:50%;border:1px solid var(--acc);background:var(--acc-soft);color:var(--acc);display:grid;place-items:center;cursor:pointer;padding:0}
+.conv-swap svg{width:20px;height:20px}
+.conv-swap:hover{background:var(--acc);color:var(--surface)}
+.conv-swap:active{transform:scale(.94)}
+@media (max-width:360px){ .conv-caja{padding-left:10px} .conv-otra{padding-right:22px} .conv-car{right:4px;width:16px;height:16px;margin-top:-8px} .conv-n{font-size:13.5px} .conv-s{font-size:11px} .conv-par{column-gap:5px} .conv-swap{width:34px;height:34px} .conv-swap svg{width:17px;height:17px} }
+@media (min-width:621px){
+  /* dos columnas parejas: sin esto la grilla auto-fit abría 4 y 5 columnitas */
+  #v-plazo .form2{grid-template-columns:repeat(2,minmax(0,1fr));align-items:end}
+}
+/* v186: en pantalla grande nada queda angosto y pegado a la izquierda.
+   - Formularios (.form2): la grilla auto-fit armaba tantas columnas como entraban
+     (6 en una tarjeta ancha) y los campos ocupaban 4: sobraba un hueco a la
+     derecha. ajustarAnchos() cuenta los campos seguidos que se ven y cuántos entran
+     (158 px cada uno) y deja en --n las columnas: todos en un renglón, o
+     repartidos parejo si no entran.
+   - Recuadros (.grid.g4): con 2 tiles (Gastos fijos) usan 2 columnas, no 4.
+   - Paneles del Resumen: si queda uno solo en la última fila, va a lo ancho.
+   - Algunos campos tenían ancho fijo (Nueva meta, Cuentas que rinden, agregar
+     grupo o categoría, Grupo familiar): ahora se estiran. */
+@media (min-width:700px){
+  .form2[style*="--n"]{grid-template-columns:repeat(var(--n),minmax(0,1fr))}
+}
+@media (min-width:760px){
+  .grid.g4[style*="--n"]{grid-template-columns:repeat(var(--n),minmax(0,1fr))}
+  .panels > .solo{grid-column:1/-1}
+  #fMeta{max-width:none}
+  .ctaform{grid-template-columns:minmax(0,2fr) minmax(118px,1fr)}
+  .fm-inv{max-width:none}
+  .ctanomf{max-width:calc((100% - 12px) * 2 / 3) !important}
+}
+@media (min-width:680px){
+  .gadd{grid-template-columns:minmax(0,1fr) auto}
+  .catadd{grid-template-columns:minmax(0,1fr) auto}
+  .catadd.congrupo{grid-template-columns:minmax(0,1fr) 160px auto}
+}
+.hx-pct{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hx-pct .pctin{width:120px}
+/* v190: el corte y los recuadros que desaparecían.
+   Las tarjetas, los recuadros del resumen, el menú del costado y la pastilla del
+   mes ya no usan backdrop-filter. Ese desenfoque en vivo, encima de un fondo fijo
+   y animado, es lo que Chrome (con aceleración por hardware) pintaba mal al
+   cambiar el tamaño de la ventana: quedaba una parte vieja, con un corte, y a
+   veces un recuadro entero no se dibujaba hasta que pasabas el mouse por algo.
+   Detrás de esas piezas sólo está el fondo de manchas, que ya está desenfocado
+   (90px), así que desenfocarlo otra vez no se notaba: el vidrio se ve igual, con
+   su tinte, su reflejo y su borde de luz. El desenfoque queda donde de verdad
+   pasa contenido por atrás: la barra de arriba, la de abajo en el celular y los
+   que se abren encima (calendario, paleta, buscador, detalle). */
+.card::before,.tile,.rail,.month{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+
+/* v185: en las calculadoras la unidad (%, cuotas, hs, días, veces) va a la
+   izquierda de la casilla, como el $, y el número arranca desde la izquierda. */
+.calcv .pctin i,#v-plazo .pctin i{order:-1;min-width:1.1em;text-align:right}
+.calcv .pctin input,#v-plazo .pctin input{text-align:left}
+.calcv .pctin input,#v-plazo .pctin input,.calcv .money-in,#v-plazo .money-in{font-family:var(--f-body);font-size:15px;font-weight:500;font-variant-numeric:tabular-nums}
+@media (min-width:1180px){
+  /* v183: en pantalla grande todas las calculadoras (y el plazo fijo) usan el
+     ancho: el formulario a la izquierda y la cuenta a la derecha, en dos
+     columnas parejas que llegan hasta el ancho del resto de la app. La cuenta
+     queda pegada arriba mientras bajás por el formulario. */
+  #v-plazo.on,.calcv.on{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+  #v-plazo > .card,#pfOut > .card,
+  .calcv > .card,.calcv > div > .card{max-width:none}
+  #pfOut,.calcv > div{position:sticky;top:84px}
+  #v-plazo > .card,.calcv > .card{padding:20px 22px}
+  #pfOut > .card,.calcv > div > .card{padding:20px 22px}
+  /* mientras no hay cuenta, la columna de la derecha avisa dónde va a aparecer */
+  #pfOut:empty,.calcv > div:empty{display:grid;place-items:center;min-height:220px;border:1.5px dashed var(--hueco-borde);
+    border-radius:var(--r);color:var(--ink-3);font-size:13.5px;text-align:center;padding:24px}
+  #pfOut:empty::before,.calcv > div:empty::before{content:"Completá los datos y acá aparece la cuenta"}
+}
+/* v184: las calculadoras crecen con la ventana. Entre el celu y las dos columnas
+   la tarjeta ya no se queda en 620 px: ocupa todo el ancho. Y en pantallas muy
+   anchas el contenido de la calculadora se abre más que el resto de la app
+   (que corta en 1120 px) y todo se agranda un poco, para que no quede una
+   isla chiquita en el medio. */
+@media (min-width:621px){
+  #v-plazo > .card,#pfOut > .card,
+  .calcv > .card,.calcv > div > .card{max-width:none}
+}
+@media (min-width:1180px){
+  .content:has(> .calcv.on),.content:has(> #v-plazo.on){max-width:min(1640px,100%)}
+}
+@media (min-width:1900px){
+  .calcv.on,#v-plazo.on{zoom:1.1}
+  /* el zoom también agranda el top del sticky: 84 / 1.1 */
+  #pfOut,.calcv > div{top:76px}
+  .content:has(> .calcv.on),.content:has(> #v-plazo.on){max-width:min(1900px,100%)}
+}
+@media (min-width:2400px){
+  .calcv.on,#v-plazo.on{zoom:1.22}
+  #pfOut,.calcv > div{top:69px}
+  .content:has(> .calcv.on),.content:has(> #v-plazo.on){max-width:min(2200px,100%)}
+}
+.slider{width:100%;-webkit-appearance:none;appearance:none;background:none;height:26px;margin:0;padding:0;cursor:pointer;display:block}
+.slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line)}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--acc);border:3px solid var(--surface);box-shadow:0 1px 5px rgba(0,0,0,.3);margin-top:-8px}
+.slider::-moz-range-track{height:6px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line)}
+.slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--acc);border:3px solid var(--surface);box-shadow:0 1px 5px rgba(0,0,0,.3)}
+.slider:hover::-webkit-slider-thumb{filter:brightness(1.08)}
+.slider[data-libre="1"]{opacity:.45}
+.ticks{position:relative;height:17px;margin:1px 10px 0}
+.ticks button{position:absolute;transform:translateX(-50%);background:none;border:0;padding:2px 4px;cursor:pointer;
+  font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3);white-space:nowrap;border-radius:5px}
+.ticks button:hover{color:var(--ink-2);background:var(--surface-2)}
+.ticks button[aria-pressed="true"]{color:var(--acc);font-weight:600}
+.libre{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3);text-transform:none;letter-spacing:0}
+.splitform{display:grid;gap:10px;grid-template-columns:1fr}
+@media (min-width:520px){
+  .splitform{grid-template-columns:1fr 1fr}
+  .splitform .c4{grid-column:1/-1}
+}
+@media (min-width:900px){
+  .splitform{grid-template-columns:repeat(6,1fr)}
+  .splitform .c2{grid-column:span 2}
+  .splitform .c4{grid-column:span 4}
+}
+.previo{display:grid;grid-template-columns:1fr minmax(120px,150px);gap:10px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.previo .k{font-size:14px;color:var(--ink-2)}
+.previo .k small{display:block;color:var(--ink-3);font-size:11.5px;margin-top:2px}
+@media (max-width:520px){ .previo{grid-template-columns:1fr 120px;gap:8px} }
+/* El punto de partida lleva dos campos: pesos y dólares. En pantalla angosta la
+   etiqueta pasa arriba y los dos campos quedan uno al lado del otro, que es más
+   legible que apilarlos. */
+.previo.dos{grid-template-columns:1fr minmax(92px,116px) minmax(92px,116px) auto;column-gap:16px}
+@media (max-width:520px){
+  .previo.dos{grid-template-columns:1fr 1fr auto;row-gap:6px;column-gap:14px}
+  .previo.dos .k{grid-column:1/-1}
+}
+@media (max-width:359px){
+  .previo.dos{grid-template-columns:1fr 1fr}
+  .previo.dos .btnini{grid-column:1/-1;justify-self:start}
+}
+/* Con llave: se lee, no se escribe. El número queda del color del texto normal
+   —es un dato, no algo apagado— y sólo el recuadro se afloja para que se note
+   que no está esperando que escribas. */
+.pctin.plata input[readonly]{background:transparent;border-color:transparent;cursor:default}
+.pctin.plata input[readonly]:hover{border-color:var(--line)}
+.previo.dos.abierto .pctin.plata input{background:var(--ground);border-color:var(--acc)}
+.previo.dos .btnini{white-space:nowrap}
+.opt{display:grid;gap:6px;padding:12px 0;border-top:1px solid var(--line)}
+.opt .l1{display:flex;justify-content:space-between;gap:10px;font-size:14px;align-items:baseline}
+.opt .l1 span:last-child{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink-2)}
