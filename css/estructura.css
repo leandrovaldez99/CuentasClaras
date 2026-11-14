@@ -89,8 +89,6 @@
 .tabs button.fab[data-tono="gasto"] span{background:var(--out)}
 .tabs button.fab[data-tono="ingreso"] span{background:var(--fab-verde)}
 .tabs button.fab[data-tono="cuotas"] span{background:var(--fab-gris)}
-.tabs button.fab[data-tono="viaje"] span{background:var(--meta)}
-/* el viaje activo, como cuarta opción del "+": un renglón propio a lo ancho */
 /* v200: cargar diciéndolo. El micrófono va en verde (es para sumar algo); mientras
    escucha se pone rojo y late, como cualquier grabador. Lo que entendí va en
    una caja hundida, y los campos que llené quedan marcados hasta que los tocás. */
@@ -107,9 +105,6 @@
 #vozMic{width:40px;height:40px;padding:0;border-radius:50%;justify-content:center}
 #vozMic svg{width:19px;height:19px}
 .voz[hidden]{display:none}
-.voz-fila{display:flex;gap:8px;align-items:center;min-width:0}
-.voz-fila input{flex:1;min-width:0}
-.voz-fila .btn{flex:none;min-height:var(--ctl)}
 .voz-mic{flex:none;height:36px;padding:0 14px 0 11px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:13.5px;font-weight:550;border:1px solid var(--hueco-borde);background:var(--vidrio-2);
   color:var(--acc);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0 14px 0 11px;white-space:nowrap}
 .voz-mic[hidden]{display:none!important}
@@ -130,12 +125,6 @@
 .voz-pie{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin-top:9px}
 .voz-pie .note{margin:0;flex:1 1 200px}
 .voz-lleno{box-shadow:0 0 0 2px var(--acc)!important;border-color:var(--acc)!important}
-#segCarga.con-viaje{display:grid;grid-template-columns:repeat(3,1fr)}
-#segCarga [data-v="viaje"]{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:7px;min-width:0}
-#segCarga [data-v="viaje"] svg{width:16px;height:16px;flex:none}
-#segCarga [data-v="viaje"] span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.seg.tone button[aria-pressed="true"][data-v="viaje"]{background:var(--meta-soft);color:var(--meta)}
-#cargaViaje .vj-cual{margin-bottom:12px}
 .tabs button.fab:active span{transform:translateX(-50%) scale(.94)}
 /* v201: mantener apretado el "+" para dictar. Mientras te escucho, el "+" se
    vuelve un micrófono rojo que late, igual que el de la carga. */

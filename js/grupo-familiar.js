@@ -6,14 +6,12 @@
 "use strict";
 
 /* ============================================================
-   grupo familiar: la app de a varios, cada uno desde su celular
+   grupo familiar: la app de a varios, cada uno con su cuenta
    ============================================================
-   Va arriba de la sincronización entre dispositivos: el grupo es el mismo
-   vínculo cifrado, sólo que los dispositivos pueden ser de personas distintas.
-   · `S.personas` (se sincroniza) dice quiénes son: { id, n, c:creada, t:último
-     cambio, fuera? }. No se pisa al juntar: se suman las de los dos lados.
-   · Cada dispositivo sabe de quién es por la lista de dispositivos
-     (`S.sy.miembros[pub].p`), que viaja cifrada con las llaves de cada uno.
+   Un grupo es un espacio de la base de datos con varios miembros: todos leen y
+   cargan en los mismos datos (ver base-de-datos.js y sql/esquema.sql).
+   · `S.personas` dice quiénes son: { id, n, c:creada, t:último cambio, fuera? }.
+   · Qué persona es cada usuario lo dice la tabla espacio_miembros (`dbSes.persona`).
    · Cada movimiento, cuota, fijo, pase y aporte lleva `quien`. Lo que se cargó
      antes de armar el grupo es del que lo armó (y lo del que entra, suyo).
    · Un gasto a medias lleva `med` (entre quiénes). Cuánto le toca a cada uno
@@ -61,8 +59,7 @@ function nombrePersona(id){ var p = personaPorId(id); return p ? p.n : '¿?'; }
 function miPersona(){
   // con cuenta: lo dice la base (tabla espacio_miembros)
   if(dbActiva()) return (dbSes.persona && personaPorId(dbSes.persona)) ? dbSes.persona : '';
-  var sy = S && S.sy, m = (sy && sy.miembros && sy.yo) ? sy.miembros[sy.yo.pub] : null;
-  return (m && m.p && personaPorId(m.p)) ? m.p : '';
+  return '';
 }
 /* De quién es algo. Lo que no tiene nombre es del que armó el grupo. */
 function quienDe(x){ return (x && x.quien) || ((personasTodas()[0] || {}).id) || ''; }
@@ -105,14 +102,6 @@ function famCeroLimpio(o){
   var r = {};
   if(o && typeof o === 'object' && !Array.isArray(o)) Object.keys(o).forEach(function(k){ if(o[k] === 'cero' || o[k] === 'todo') r[k] = o[k]; });
   return r;
-}
-/* En el dispositivo del que entró de cero: si le pasaron todo, lo de antes empieza a viajar. */
-function famTraerRevisar(){
-  var sy = S.sy, yo = miPersona();
-  if(!sy || !sy.solo || !yo || !S.famCero || S.famCero[yo] !== 'todo') return false;
-  delete sy.solo;
-  setTimeout(function(){ toast('Lo que tenías cargado antes de sumarte ahora también está en el grupo'); }, 300);
-  return true;
 }
 var REP_MODOS = ['partes', 'ingresos', 'mano'];
 function repartoLimpio(o){
@@ -498,12 +487,12 @@ function textoReparto(med, ym, total, rep){
   var r = repartoInfo(med, ym, rep);
   return r.ids.map(function(id){ return nombrePersona(id) + ' ' + money(total * r.por[id]) + ' (' + pctTxt(r.por[id]) + ')'; }).join(' · ');
 }
-/* Lo que no tiene dueño pasa a ser de la persona de este dispositivo. */
+/* Lo que no tiene dueño pasa a ser de la persona de esta cuenta. */
 function etiquetar(){
   var yo = miPersona(); if(!yo) return false;
   var n = 0;
   function t(x){ if(x && !x.quien){ x.quien = yo; n++; } }
-  S.tx.forEach(t); S.planes.forEach(t); (S.fijos || []).forEach(t); (S.pases || []).forEach(t); (S.hx || []).forEach(t);
+  S.tx.forEach(t); S.planes.forEach(t); (S.fijos || []).forEach(t); (S.pases || []).forEach(t);
   S.metas.forEach(function(m){ (m.aportes || []).forEach(t); });
   return n > 0;
 }
@@ -521,7 +510,7 @@ function pintarVerQuien(){
         return '<button type="button" data-ver="' + esc(p.id) + '" aria-pressed="' + (v === p.id ? 'true' : 'false') + '">' + esc(p.n) + '</button>';
       }).join('') + '</div>';
   if(v) html += '<p class="note">' + (v === yo ? 'Lo tuyo' : 'Lo de ' + esc(nombrePersona(v)))
-    + ': ingresos y gastos propios, más su parte de los gastos a medias. Los intereses de las cuentas están en "Todos".</p>';
+    + ': ingresos y gastos propios, más su parte de los gastos a medias.</p>';
   el.innerHTML = html;
 }
 
@@ -840,7 +829,7 @@ function familiaHtml(){
       + '<input id="fmYo" type="text" maxlength="28" placeholder="Como te dicen" autocomplete="off"></div>'
       + '<button class="btn" type="button" data-fm="crear">Armar el grupo</button></div>'
       + '<p class="note" style="margin-top:8px">Después les pasás un código a los demás, y cada uno se suma desde su cuenta. Lo que ya tenés cargado queda a tu nombre.</p>'
-      + '<details class="vj-pegar"><summary>¿Te invitaron? Poné el código acá</summary>'
+      + '<details class="desplegable"><summary>¿Te invitaron? Poné el código acá</summary>'
       + '<div class="fm-inv fm-sumar" style="margin-top:4px"><div class="field"><label class="lab" for="fmCodigoIn">Código del grupo</label>'
       + '<input id="fmCodigoIn" type="text" maxlength="12" placeholder="ABCD-1234" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>'
       + '<div class="field"><label class="lab" for="fmNomIn">Tu nombre</label>'
@@ -854,7 +843,7 @@ function familiaHtml(){
     return html + '</div>';
   }
   var e = dbEstadoTxt();
-  html += '<p class="vj-auto ' + e[0] + '" id="fmAuto" role="status"><i aria-hidden="true"></i><span>' + esc(e[1]) + '</span></p>';
+  html += '<p class="estado-base ' + e[0] + '" id="fmAuto" role="status"><i aria-hidden="true"></i><span>' + esc(e[1]) + '</span></p>';
   html += '<div class="lab">En el grupo</div><div>' + personasActivas().map(function(p){
       var ing = ingresoRef(p.id, mes), soy = p.id === yo, conf = fmConf === 'sacar:' + p.id;
       return '<div class="fm-per"><span><b>' + esc(p.n) + '</b>' + (soy ? '<i>vos</i>' : '') + '</span>'
@@ -864,8 +853,8 @@ function familiaHtml(){
     }).join('') + '</div>';
   if(soyCreador){
     html += dbSes.codigo
-      ? '<div class="dv-caja" id="fmInvita"><p class="note">Para sumar a alguien, pasale este código. En su app: Herramientas › Grupo familiar › "¿Te invitaron?".</p>'
-        + '<p class="dv-verif" id="fmCodigo">' + esc(fmCodigoLindo(dbSes.codigo)) + '</p>'
+      ? '<div class="caja" id="fmInvita"><p class="note">Para sumar a alguien, pasale este código. En su app: Herramientas › Grupo familiar › "¿Te invitaron?".</p>'
+        + '<p class="codigo-grande" id="fmCodigo">' + esc(fmCodigoLindo(dbSes.codigo)) + '</p>'
         + '<div class="rowflex"><button class="btn ghost sm" type="button" data-fm="copiar">Copiar el código</button>'
         + '<button class="btn ghost sm" type="button" data-fm="codigoNuevo">Cambiar el código</button></div>'
         + '<p class="note" style="margin:10px 0 0">El código sirve hasta que lo cambies. Quien lo tenga y tenga cuenta puede sumarse.</p></div>'
@@ -876,7 +865,7 @@ function familiaHtml(){
       + (fmConf === 'salir' ? 'Tocá otra vez: salís del grupo' : 'Salir del grupo') + '</button></div>'
       + (fmConf === 'salir' ? '<p class="note" style="margin:8px 0 0">Volvés a tus datos de antes. Lo que cargaste en el grupo queda ahí, con tu nombre.</p>' : '');
   }
-  html += '<details class="vj-pegar"><summary>Cambiar tu nombre</summary><div class="fm-inv" style="margin-top:4px">'
+  html += '<details class="desplegable"><summary>Cambiar tu nombre</summary><div class="fm-inv" style="margin-top:4px">'
     + '<div class="field"><label class="lab" for="fmMiNom">Tu nombre</label><input id="fmMiNom" type="text" maxlength="28" value="' + esc(nombrePersona(yo)) + '" autocomplete="off"></div>'
     + '<button class="btn ghost" type="button" data-fm="minom">Guardar</button></div></details>';
   html += '</div>';
@@ -904,7 +893,7 @@ function familiaHtml(){
 }
 function renderFamilia(){
   var el = $('#familiaCuerpo'); if(!el) return;
-  // lo que estabas escribiendo no se pierde si llega algo de otro dispositivo
+  // lo que estabas escribiendo no se pierde si llega algo de otro miembro del grupo
   var guardo = {}, a = document.activeElement, foco = (a && a.id && el.contains(a)) ? a.id : '';
   ['fmYo', 'fmNomIn', 'fmCodigoIn', 'fmMiNom'].forEach(function(id){ var i = document.getElementById(id); if(i) guardo[id] = i.value; });
   var abierto = $$('#familiaCuerpo details[open] summary').map(function(s){ return s.textContent; });
@@ -917,7 +906,7 @@ function renderFamilia(){
    base pasa a ser el del grupo. Después invita a los demás con un código. */
 function crearGrupo(nombre){
   if(!dbActiva()){ toast('Para armar un grupo hace falta entrar con una cuenta'); return; }
-  var id = vjIdCorto(), ahora = Date.now();
+  var id = idCorto(), ahora = Date.now();
   S.personas = perJuntar(S.personas || [], [{ id:id, n:nombre, c:ahora, t:ahora }]);
   save();
   dbEmpujarYa().then(function(){
@@ -967,7 +956,7 @@ function grupoUnirse(codigoTxt, nombre, traer){
   if(cod.length < 6){ toast('Poné el código que te pasaron'); var c = $('#fmCodigoIn'); if(c) c.focus(); return; }
   if(!nombre){ toast('Poné tu nombre'); var n = $('#fmNomIn'); if(n) n.focus(); return; }
   if(dbSes.codigo === cod){ toast('Ese es el código de tu propio grupo'); return; }
-  var mio = traer ? JSON.parse(JSON.stringify(sinSy())) : null, per = vjIdCorto();
+  var mio = traer ? JSON.parse(JSON.stringify(S)) : null, per = idCorto();
   toast('Sumándote al grupo…');
   dbEmpujarYa().catch(function(){}).then(function(){
     return db.rpc('unirse_a_espacio', { p_codigo:cod, p_persona:per, p_nombre:nombre });
@@ -1000,16 +989,13 @@ function grupoSumarLoMio(mio, per){
     var ya = {}; dest.forEach(function(x){ ya[x.id] = 1; });
     (lista || []).forEach(function(x){ if(x && x.id && !ya[x.id]){ ya[x.id] = 1; dest.push(cada ? cada(x) : x); } });
   }
-  S.fijos = S.fijos || []; S.pases = S.pases || []; S.hx = S.hx || []; S.viajes = S.viajes || [];
+  S.fijos = S.fijos || []; S.pases = S.pases || [];
   sumar(S.tx, mio.tx, mia); sumar(S.planes, mio.planes, mia); sumar(S.fijos, mio.fijos, mia);
-  sumar(S.pases, mio.pases, mia); sumar(S.hx, mio.hx, mia); sumar(S.viajes, mio.viajes);
+  sumar(S.pases, mio.pases, mia);
   sumar(S.metas, mio.metas, function(m){ (m.aportes || []).forEach(mia); return m; });
   (mio.medios || []).forEach(function(m){ if(S.medios.indexOf(m) < 0) S.medios.push(m); });
   (mio.catGasto || []).forEach(function(c){ if(S.catGasto.indexOf(c) < 0) S.catGasto.push(c); });
   (mio.catIng || []).forEach(function(c){ if(S.catIng.indexOf(c) < 0) S.catIng.push(c); });
-  (mio.cuentas || []).forEach(function(c){
-    if(c && c.medio && !S.cuentas.some(function(x){ return x.id === c.id || x.medio === c.medio; })) S.cuentas.push(c);
-  });
   Object.keys(mio.diaMedio || {}).forEach(function(k){ S.diaMedio = S.diaMedio || {}; if(!S.diaMedio[k]) S.diaMedio[k] = mio.diaMedio[k]; });
   _repCache = null;
 }
@@ -1035,26 +1021,25 @@ function fmTraeTxt(){
     : 'Tus movimientos, cuotas y ahorros de antes se suman al grupo con tu nombre.';
 }
 function cargadoPor(id){
-  var c = { tx:0, gas:0, ing:0, planes:0, fijos:0, pases:0, hx:0, aportes:0, medias:0 };
+  var c = { tx:0, gas:0, ing:0, planes:0, fijos:0, pases:0, aportes:0, medias:0 };
   S.tx.forEach(function(t){ if(quienDe(t) === id){ c.tx++; if(t.tipo === 'ingreso') c.ing++; else c.gas++; } else if(Array.isArray(t.med) && t.med.indexOf(id) > -1) c.medias++; });
   S.planes.forEach(function(x){ if(quienDe(x) === id) c.planes++; else if(Array.isArray(x.med) && x.med.indexOf(id) > -1) c.medias++; });
   (S.fijos || []).forEach(function(x){ if(quienDe(x) === id) c.fijos++; else if(Array.isArray(x.med) && x.med.indexOf(id) > -1) c.medias++; });
   (S.pases || []).forEach(function(x){ if(quienDe(x) === id) c.pases++; });
-  (S.hx || []).forEach(function(x){ if(quienDe(x) === id) c.hx++; });
   S.metas.forEach(function(m){ (m.aportes || []).forEach(function(a){ if(quienDe(a) === id) c.aportes++; }); });
-  c.total = c.tx + c.planes + c.fijos + c.pases + c.hx + c.aportes;
+  c.total = c.tx + c.planes + c.fijos + c.pases + c.aportes;
   return c;
 }
 function cuantosTxt(c){
   var l = [];
   function n(k, uno, varios){ if(k) l.push(k + ' ' + (k === 1 ? uno : varios)); }
   n(c.gas, 'gasto', 'gastos'); n(c.ing, 'ingreso', 'ingresos'); n(c.planes, 'compra en cuotas', 'compras en cuotas');
-  n(c.fijos, 'fijo', 'fijos'); n(c.pases, 'pase', 'pases'); n(c.aportes, 'aporte a una meta', 'aportes a metas'); n(c.hx, 'carga de horas extras', 'cargas de horas extras');
+  n(c.fijos, 'fijo', 'fijos'); n(c.pases, 'pase', 'pases'); n(c.aportes, 'aporte a una meta', 'aportes a metas');
   return listaY(l);
 }
 function sacarPreguntaHtml(p){
   var c = cargadoPor(p.id), armado = fmBorrarArmado === p.id;
-  return '<div class="dv-caja dv-preg fm-sacar" id="fmSacar">'
+  return '<div class="caja caja-preg fm-sacar" id="fmSacar">'
     + '<p><b>¿Sacar a ' + esc(p.n) + ' del grupo?</b></p>'
     + '<p class="note">Deja de ver lo del grupo y vuelve a sus propios datos.'
     + (c.total ? ' Cargó ' + esc(cuantosTxt(c)) + '. ¿Qué hacemos con eso?' : ' No cargó nada todavía.') + '</p>'
@@ -1069,8 +1054,8 @@ function sacarPreguntaHtml(p){
         + (c.medias ? '; y de los gastos a medias de los demás que lo incluían, sale del reparto' : '') + '.</p>' : '')
     + '</div>';
 }
-/* Borra lo que cargó esa persona (en este dispositivo; la sincronización lo
-   borra en los demás) y la saca de los repartos a medias de los otros. */
+/* Borra lo que cargó esa persona (se borra de la base para todos) y la saca de
+   los repartos a medias de los otros. */
 function borrarLoDe(id){
   var de = function(x){ return quienDe(x) === id; };
   function sinEl(x){
@@ -1082,7 +1067,6 @@ function borrarLoDe(id){
   S.planes = S.planes.filter(function(x){ return !de(x); }); S.planes.forEach(sinEl);
   S.fijos = (S.fijos || []).filter(function(x){ return !de(x); }); S.fijos.forEach(sinEl);
   S.pases = (S.pases || []).filter(function(x){ return !de(x); });
-  S.hx = (S.hx || []).filter(function(x){ return !de(x); });
   S.metas.forEach(function(m){ m.aportes = (m.aportes || []).filter(function(a){ return !de(a); }); });
   if(S.reparto && S.reparto.pct && (id in S.reparto.pct)){ delete S.reparto.pct[id]; }
   _repCache = null;

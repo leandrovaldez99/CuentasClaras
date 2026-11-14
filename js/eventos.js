@@ -59,12 +59,8 @@ document.addEventListener('click', function(e){
     if(editando){ salirEdit(); }
     if(editandoPlan){ salirEditPlan(); }
     cargaTab = seg.getAttribute('data-v');
-    if(cargaTab === 'viaje'){
-      var vv = vjViajeCarga();
-      if(vv){ viajeSel = vv.id; vjEdit = null; vjEntre = null; vjForm = null; vjCompartir = null; vjBorrar = null; }
-    } else if(cargaTab !== 'cuotas') tipoMov = cargaTab;
+    if(cargaTab !== 'cuotas') tipoMov = cargaTab;
     pintarCarga(); fillSelects();
-    if(cargaTab === 'viaje'){ var mv = $('#vjMonto'); if(mv) try{ mv.focus(); }catch(x){} }
     return;
   }
   var segr = e.target.closest('#segRango button');
@@ -207,7 +203,6 @@ document.addEventListener('click', function(e){
     var salida = { id:uid(), ts:Date.now(), monto:-mto,
       fecha: frm.elements.fecha.value || defaultFecha(), cot:cotS };
     if(monS !== (meta.moneda || 'ARS') || monS === 'USD') salida.mon = monS;
-    ponerLugar(meta, salida, lugarDelForm(frm, monS));   // sale de donde elegiste
     meta.aportes.push(salida);
     save(); render();
     toast('Sacaste ' + (monS === 'USD' ? usd(mto) : money(mto)) + ' de ' + meta.nombre);
@@ -249,102 +244,6 @@ document.addEventListener('click', function(e){
       var c0 = $('[data-inicial="'+idIni+'|ARS"]');
       if(c0) try{ c0.focus(); c0.select(); }catch(x){}
     }
-    return;
-  }
-
-  var rsw = e.target.closest('[data-rctl] .rsw'), rch = e.target.closest('[data-rctl] [data-rchip]');
-  if(rsw || rch){
-    var rbox = (rsw || rch).closest('[data-rctl]'), rkey = rbox.getAttribute('data-rctl');
-    var rah = rbox.querySelector('input[name="donde"]').value;
-    /* Con el interruptor prendido, en lo que ya tenías se puede tocar más de una
-       cuenta: la plata puede estar repartida. */
-    if(rch && rah && rbox.hasAttribute('data-multi')){
-      var rcid = rch.getAttribute('data-rchip');
-      if(rkey === 'nueva'){ tocarCuentaNueva(rbox, rcid); return; }
-      var rmm = metaPorId(rkey.split(':')[1]);
-      if(rmm) tocarCuentaIni(rmm, rcid);
-      return;
-    }
-    var rnu = rch ? rch.getAttribute('data-rchip') : (rah ? '' : lugarSugerido());
-    if(rnu) ultimoLugar = rnu;
-    pintarRctl(rbox, rnu);
-    if(rkey === 'nueva'){ nuevaLugar = rnu; if(!rnu) nuevaOtras = []; pintarNuevaDonde(); return; }
-    var rpar = rkey.split(':'), rm = metaPorId(rpar[1]);
-    if(rpar[0] === 'ap'){
-      if(apEdit && apEdit.meta === rpar[1]) apEdit.lugar = rnu; else dondeAp[rpar[1]] = rnu;
-      return;
-    }
-    if(rpar[0] === 'ini' && rm){
-      if(!rnu) juntarTodo(rm);
-      rm.rinde = !!rnu;
-      if(rnu) rm.cuenta = rnu; else delete rm.cuenta;
-      save(); render();
-      toast(rnu ? ('Lo que ya tenías rinde en ' + nombreLugar(rnu)) : 'Lo que ya tenías queda guardado aparte, sin rendir');
-    }
-    return;
-  }
-  var gcs = e.target.closest('[data-gctasacar]');
-  if(gcs){
-    var gcid = gcs.getAttribute('data-gctasacar');
-    nuevaOtras = nuevaOtras.filter(function(o){ return o.cid !== gcid; });
-    var gbox = $('#gDonde [data-rctl]'); if(gbox) pintarRctl(gbox, nuevaLugar, nuevaOtrasIds());
-    pintarNuevaDonde();
-    return;
-  }
-  var cs = e.target.closest('[data-ctasacar]');
-  if(cs){
-    var kcs = cs.getAttribute('data-ctasacar').split('|'), mcs = metaPorId(kcs[0]);
-    if(!mcs) return;
-    tocarCuentaIni(mcs, kcs[1]);
-    return;
-  }
-  if(e.target.closest('#gEfAbrir')){
-    $('#gEfRow').hidden = false; pintarNuevaDonde();
-    try{ $('#gEfectivo').focus(); }catch(x){}
-    return;
-  }
-  if(e.target.closest('#gEfCerrar')){
-    $('#gEfRow').hidden = true; $('#gEfectivo').value = ''; pintarNuevaDonde();
-    return;
-  }
-  var efA = e.target.closest('[data-efabrir]');
-  if(efA){
-    var idEa = efA.getAttribute('data-efabrir');
-    efecAbierto[idEa] = true; renderAhorro();
-    var cEa = $('[data-iefec="' + idEa + '"]'); if(cEa) try{ cEa.focus(); }catch(x){}
-    return;
-  }
-  var efC = e.target.closest('[data-efcerrar]');
-  if(efC){
-    var mEc = metaPorId(efC.getAttribute('data-efcerrar'));
-    if(!mEc) return;
-    var tenia = efectivoDe(mEc);
-    ponerEfectivo(mEc, 0); delete efecAbierto[mEc.id];
-    if(tenia > 0){ save(); render(); toast('Los ' + money(tenia) + ' vuelven a rendir en ' + nombreLugar(lugarInicial(mEc))); }
-    else renderAhorro();
-    return;
-  }
-  var pAdd = e.target.closest('[data-padd]');
-  if(pAdd){
-    var idPa = pAdd.getAttribute('data-padd');
-    parteNueva[idPa] = true;
-    renderAhorro();
-    var cN = $('#metaList [data-pmonto="' + idPa + '|"]');
-    if(cN) try{ cN.focus(); }catch(x){}
-    return;
-  }
-  var pUn = e.target.closest('[data-punir]');
-  if(pUn){
-    var kU = pUn.getAttribute('data-punir').split('|'), mU = metaPorId(kU[0]);
-    if(!kU[1]){ delete parteNueva[kU[0]]; delete parteNuevaLugar[kU[0]]; renderAhorro(); return; }
-    if(!mU) return;
-    var aU = aportePorId(mU, kU[1]);
-    if(!aU) return;
-    var vU = Number(aU.monto)||0;
-    mU.inicial = iniArs(mU) + vU;
-    mU.aportes = mU.aportes.filter(function(a){ return a.id !== aU.id; });
-    save(); render();
-    toast('Junté ' + money(vU) + ' con el primer renglón');
     return;
   }
 
@@ -432,7 +331,6 @@ document.addEventListener('click', function(e){
     if(kind==='meta') S.metas = S.metas.filter(function(mm){ return mm.id !== id; });
     if(kind==='arrastre'){ S.arrastre = S.arrastre || {}; S.arrastre[id] = false; }
     if(kind==='fijo'){ var cad = cadenaFijo(id); S.fijos = S.fijos.filter(function(f){ return cad.indexOf(f.id) < 0; }); if(cad.indexOf(editandoFijo) > -1) salirEditFijo(); }
-    if(kind==='hx'){ S.hx = (S.hx||[]).filter(function(x){ return x.id !== id; }); if(hxEdit === id) hxSalirEdit(); }
     if(kind==='aporte'){
       S.metas.forEach(function(mm){ if(mm.id===id) mm.aportes = mm.aportes.filter(function(a){ return a.id !== x; }); });
     }
@@ -551,49 +449,6 @@ document.addEventListener('click', function(e){
   var sfj = e.target.closest('#segFijo button');
   if(sfj){ fijoTab = sfj.getAttribute('data-v'); pintarFijoForm(); renderFijos(); return; }
 
-  var cadd = e.target.closest('#cuentaAdd');
-  if(cadd){
-    if(cuentas().length >= MAX_CUENTAS){ toast('Ya tenés ' + MAX_CUENTAS + ' cuentas'); return; }
-    S.cuentas.push({ id:uid(), entidad:'', tna:0, manual:false, medio:'' });
-    save(); render();
-    toast('Agregué una cuenta: elegí su banco y le pongo el nombre');
-    return;
-  }
-  var cdel = e.target.closest('[data-cdel]');
-  if(cdel){
-    var idc = cdel.getAttribute('data-cdel');
-    if(cuentas().length <= 1){ toast('Tiene que quedar al menos una cuenta'); return; }
-    if(cuentaDelConfirm !== idc){ cuentaDelConfirm = idc; renderCuentas(); return; }
-    cuentaDelConfirm = null;
-    var nomBorrada = (cuentaPorId(idc)||{}).medio || 'la cuenta';
-    S.cuentas = cuentas().filter(function(c){ return c.id !== idc; });
-    S.metas.forEach(function(m){
-      if(m.cuenta === idc) delete m.cuenta;
-      (m.aportes||[]).forEach(function(a){ if(a.cuenta === idc) delete a.cuenta; });
-    });
-    save(); render();
-    // el medio de pago queda: tiene movimientos cargados y no son de nadie más
-    toast('Borré "' + nomBorrada + '". El medio de pago sigue en la lista.');
-    return;
-  }
-  if(cuentaDelConfirm){ cuentaDelConfirm = null; renderCuentas(); }
-  var tnB = e.target.closest('[data-tnaedit]');
-  if(tnB){
-    var idTn = tnB.getAttribute('data-tnaedit');
-    if(tnaEdit[idTn]){
-      // "Listo": si quedó algo escrito sin confirmar, se guarda antes de trabar
-      var inTn = $('[data-ctna="' + idTn + '"]');
-      delete tnaEdit[idTn];
-      if(inTn && inTn.value !== inTn.defaultValue){ inTn.dispatchEvent(new Event('change', {bubbles:true})); return; }
-      renderCuentas();
-      return;
-    }
-    tnaEdit[idTn] = true; renderCuentas();
-    var inTn2 = $('[data-ctna="' + idTn + '"]');
-    if(inTn2) try{ inTn2.focus(); inTn2.select(); }catch(x){}
-    return;
-  }
-
   var swp = e.target.closest('#swPesos');
   if(swp){
     verEnPesos = !verEnPesos;
@@ -619,12 +474,10 @@ document.addEventListener('click', function(e){
       return;
     }
     wipe.removeAttribute('data-armed'); wipeTxt(wipe, false);
-    // borrar todo desvincula: si no, el borrado viajaría a los otros dispositivos
-    var dvHabia = dvActivo();
     var gente = S.personas, marca = S.dbMarca;
     S = emptyState();
     if(dbActiva()){ S.personas = gente; S.dbMarca = marca; }      // en la base: se borran los datos, no la gente del grupo
-    save(); render(); nsRevisar(); toast('Listo, quedó todo en cero' + (dvHabia ? '. Este dispositivo quedó desvinculado' : ''));
+    save(); render(); toast('Listo, quedó todo en cero');
     return;
   }
   if(e.target.closest('#avisoLlenoOk')){ espacio.oculto = true; pintarEspacio(); return; }
@@ -660,7 +513,7 @@ $('#fMov').addEventListener('submit', function(e){
   var datos = { tipo:tipoMov, monto:monto, cat:$('#mCat').value, fecha:$('#mFecha').value || defaultFecha(),
                 medio:$('#mMedio').value, nota:$('#mNota').value.trim() };
   if(monMov === 'USD'){
-    var cotM = cotParaGuardar();
+    var cotM = cotParaGuardar('m');
     if(!cotM){ $('#mMonto').focus(); return; }
     datos.mon = 'USD'; datos.cot = cotM;
   }
@@ -679,8 +532,8 @@ $('#fMov').addEventListener('submit', function(e){
       t.tipo = datos.tipo; t.monto = datos.monto; t.cat = datos.cat;
       t.fecha = datos.fecha; t.medio = datos.medio; t.nota = datos.nota;
       if(hayGrupo()){ if(gq.med && !esMedias(t)) t.pend = 1; t.quien = gq.quien || t.quien; if(gq.med) t.med = gq.med; else { delete t.med; delete t.pend; delete t.sal; } if(gq.med && gq.rep) t.rep = gq.rep; else delete t.rep; }
-      // si ya venía en dólares y sigue en dólares, se respeta su cotización original
-      if(datos.mon === 'USD'){ if(t.mon !== 'USD') t.cot = datos.cot; t.mon = 'USD'; }
+      // la cotización es la que dice el formulario (arranca con la que tenía)
+      if(datos.mon === 'USD'){ t.cot = datos.cot; t.mon = 'USD'; }
       else { delete t.mon; delete t.cot; }
     });
     save();
@@ -730,7 +583,7 @@ $('#fFijo').addEventListener('submit', function(e){
   if(monto <= 0){ toast(esIng ? 'Poné cuánto entra' : 'Poné cuánto sale'); $('#fMonto').focus(); return; }
   var cotF = 0;
   if(monFijo === 'USD'){
-    cotF = cotParaGuardar();
+    cotF = cotParaGuardar('f');
     if(!cotF){ $('#fMonto').focus(); return; }
   }
   var cuando = esIng ? $('#fCuando').value : 'dia';
@@ -742,7 +595,7 @@ $('#fFijo').addEventListener('submit', function(e){
   var fechaG = esIng ? '' : ($('#fFecha').value || defaultFecha());
   var desde = esIng ? ($('#fDesde').value || mes) : ymOf(fechaG);
   var diaG = esIng ? Math.min(31, Math.max(1, parseInt($('#fDia').value,10) || 1)) : parseInt(fechaG.slice(8,10), 10);
-  var horaG = esIng ? '' : vjHoraOk($('#fHora').value);
+  var horaG = esIng ? '' : horaOk($('#fHora').value);
   var qhabG = Math.min(15, Math.max(0, parseInt($('#fQhab').value, 10)));
   if(!(qhabG >= 0)) qhabG = 4;
   var nhabG = Math.min(20, Math.max(1, parseInt($('#fNhab').value, 10) || 4));
@@ -863,46 +716,13 @@ $('#fMeta').addEventListener('submit', function(e){
      monedas a la vez, y ninguna se convierte a la otra al guardarla. */
   var ini    = Math.max(0, parseMoney($('#gInicial').value));
   var iniUsd = Math.max(0, parseMoney($('#gInicialUsd').value));
-  /* Dónde están los pesos: lo que diga el interruptor. Si una parte está en
-     efectivo, esa parte queda aparte y el resto rinde en la cuenta elegida. */
-  var lugN = (ini > 0) ? lugarValido(nuevaLugar || '') : '';
-  var efN = (lugN && !$('#gEfRow').hidden) ? Math.max(0, parseMoney($('#gEfectivo').value)) : 0;
-  var otN = lugN ? nuevaOtras.filter(function(o){ return lugarValido(o.cid) && o.cid !== lugN; })
-                              .map(function(o){ return { cid:o.cid, v:Math.max(0, parseMoney(o.v || '')) }; })
-                              .filter(function(o){ return o.v > 0; }) : [];
-  var enOt = otN.reduce(function(t, o){ return t + o.v; }, 0);
-  if(efN + enOt > ini + 0.005){
-    toast('Lo que repartiste pasa los ' + money(ini) + ' que pusiste');
-    var fx = otN.length ? $('#gc-' + otN[otN.length - 1].cid) : $('#gEfectivo'); if(fx) fx.focus();
-    return;
-  }
   var nueva = { id:uid(), nombre:$('#gNombre').value.trim() || 'Meta de ahorro', objetivo:obj,
                 inicial: ini, inicialUsd: iniUsd,
-                moneda:monedaMeta, desde:today(), rinde:!!lugN, aportes:[] };
-  if(lugN) nueva.cuenta = lugN;
-  otN.forEach(function(o){ ponerEnCuenta(nueva, o.cid, o.v); });
-  if(efN > 0) ponerEfectivo(nueva, efN);
+                moneda:monedaMeta, desde:today(), aportes:[] };
   S.metas.push(nueva);
   save(); $('#gNombre').value=''; $('#gObj').value=''; $('#gInicial').value=''; $('#gInicialUsd').value='';
-  $('#gEfectivo').value = ''; $('#gEfRow').hidden = true;
-  nuevaLugar = undefined; nuevaOtras = []; var gd = $('#gDonde'); if(gd) gd.innerHTML = '';
-  render(); pintarNuevaDonde();
-  var frN = [money(ini - efN - enOt) + ' rinden en ' + nombreLugar(lugN)];
-  otN.forEach(function(o){ frN.push(money(o.v) + ' en ' + nombreLugar(o.cid)); });
-  if(efN > 0) frN.push(money(efN) + ' en efectivo');
-  toast('Meta creada' + (ini > 0 ? (lugN ? ((efN > 0 || otN.length) ? ': ' + listaY(frN)
-                                                   : ': tus pesos rinden en ' + nombreLugar(lugN))
-                                         : ': tus pesos quedan aparte, sin rendir') : ''));
-});
-document.addEventListener('input', function(e){
-  var gc = e.target.closest && e.target.closest('[data-gcta]');
-  if(gc){
-    var gcid2 = gc.getAttribute('data-gcta');
-    nuevaOtras.forEach(function(o){ if(o.cid === gcid2) o.v = gc.value; });
-    pintarNuevaDonde();
-    return;
-  }
-  if(e.target.id === 'gInicial' || e.target.id === 'gEfectivo') pintarNuevaDonde();
+  render();
+  toast('Meta creada');
 });
 document.addEventListener('submit', function(e){
   var f = e.target.closest('[data-aporte]');
@@ -920,7 +740,6 @@ document.addEventListener('submit', function(e){
   var cot = guardarCotAporte(meta, mon);
   if(cot === null){ f.elements.monto.focus(); return; }
   var fecha = f.elements.fecha.value || defaultFecha();
-  var lugar = lugarDelForm(f, mon);
 
   if(apEdit && apEdit.meta === id){
     var ap = aportePorId(meta, apEdit.ap);
@@ -931,19 +750,18 @@ document.addEventListener('submit', function(e){
       if(mon === (meta.moneda || 'ARS')) delete ap.mon; else ap.mon = mon;
       // si cambió de moneda, la cotización se vuelve a tomar; si no, se respeta
       if(cot > 0) ap.cot = cot;
-      ponerLugar(meta, ap, lugar);
       if(apEdit.previo) ap.previo = true; else delete ap.previo;
     }
     salirApEdit();
     save(); render(); toast('Aporte corregido');
     return;
   }
-  var datos = { monto:monto, mon:mon, cot:cot, fecha:fecha, lugar:lugar };
+  var datos = { monto:monto, mon:mon, cot:cot, fecha:fecha };
   /* Plata de un mes que ya pasó: cargarla como aporte de ese mes le cambia el
      balance a un mes cerrado. Lo más probable es que sea plata que ya tenías,
      así que antes de guardar pregunto, recomendando sumarla a lo que ya tenías. */
   if(ymOf(fecha) < ymNow()){
-    apPregunta = { meta:id, monto:monto, mon:mon, cot:cot, fecha:fecha, lugar:lugar };
+    apPregunta = { meta:id, monto:monto, mon:mon, cot:cot, fecha:fecha };
     renderAhorro();
     var b = $('[data-aporte="'+id+'"] [data-appreg="previo"]');
     if(b) try{ b.focus({preventScroll:true}); }catch(x){}
@@ -956,8 +774,6 @@ document.addEventListener('keydown', function(e){
   if(e.key === 'Escape' && !$('#lupaDia').hidden){ cerrarDia(); return; }
   if(e.key === 'Escape' && !$('#lupaMed').hidden){ cerrarMedios(); return; }
   if(e.key === 'Escape' && !$('#lupa').hidden){ cerrarLupa(); return; }
-  if(e.key === 'Enter' && e.target.id === 'convCot' && convCotEdit){ e.preventDefault(); convCotEdit = false; e.target.blur(); renderConv(); return; }
-  if(e.key === 'Enter' && e.target.id === 'cycInf'){ e.preventDefault(); cycInfTrabar(); e.target.blur(); return; }
   if((e.key === 'Enter' || e.key === ' ') && e.target.id === 'chMes'){ e.preventDefault(); abrirLupa(); return; }
   if((e.key === 'Enter' || e.key === ' ') && e.target.hasAttribute && e.target.hasAttribute('data-pgfijo')){ e.preventDefault(); e.target.click(); return; }
   if(e.key === 'Enter' && e.target.id === 'catNueva'){ e.preventDefault(); $('#catAdd').click(); }
@@ -1099,7 +915,7 @@ document.addEventListener('change', function(e){
     var nuevo2 = Math.max(0, parseMoney(ini2.value));
     S.metas.forEach(function(mm){
       if(mm.id !== mid) return;
-      if(monI === 'USD') mm.inicialUsd = nuevo2; else ponerTotalIni(mm, nuevo2);
+      if(monI === 'USD') mm.inicialUsd = nuevo2; else mm.inicial = nuevo2;
     });
     save(); render();
     toast(nuevo2 > 0
@@ -1161,66 +977,6 @@ document.addEventListener('change', function(e){
     if(vm && vm !== mes){ mes = vm; confirmId = null; render(); syncFechas(); pintarLupa(); }
     return;
   }
-  var cent = e.target.closest('[data-cent]');
-  if(cent){
-    var cE = cuentaPorId(cent.getAttribute('data-cent'));
-    if(cE){
-      cE.entidad = cent.value;
-      cE.manual = false;
-      var aviso = aplicarMedioDeCuenta(cE);   // el medio de pago toma el nombre del banco
-      save(); fillSelects(); render();
-      if(aviso) toast(aviso);
-    }
-    return;
-  }
-  var ctna = e.target.closest('[data-ctna]');
-  if(ctna){
-    var cT = cuentaPorId(ctna.getAttribute('data-ctna'));
-    if(!cT) return;
-    var vt = Math.max(0, Math.min(500, parseMoney(ctna.value)));
-    var ee = null;
-    (S.tasas||[]).forEach(function(x){ if(x.api === cT.entidad) ee = x; });
-    // v287: si quedó el mismo número que se veía, no la toqué: no se fija
-    if(ee && vt > 0 && Math.abs(vt - Math.round(ee.tna * 100) / 100) < 0.005){ delete tnaEdit[cT.id]; renderCuentas(); return; }
-    if(ee){
-      // editaste la tasa de una entidad: queda fija y no la pisa la actualización
-      if(vt > 0){ ee.tna = vt; ee.fija = true; }
-      else {
-        delete ee.fija;
-        var orig = null;
-        TASAS_DEF.forEach(function(d){ if(d.api === ee.api) orig = d; });
-        if(orig) ee.tna = orig.tna;
-        delete ee.al;
-        setTimeout(traerTasas, 0);   // v287: vuelve a ser automática: que se actualice ya
-      }
-      cT.manual = false;
-    } else {
-      cT.tna = vt;
-      cT.manual = vt > 0;
-    }
-    delete tnaEdit[cT.id];
-    save(); render();
-    if(vt > 0) toast('Tasa de ' + (cT.medio || 'la cuenta') + ': ' + fmtPct(vt) + ' anual' + (ee ? '. Queda fija: la actualización diaria no la pisa' : ''));
-    return;
-  }
-  var cnom = e.target.closest('[data-cmed]');
-  if(cnom){
-    var cN = cuentaPorId(cnom.getAttribute('data-cmed'));
-    if(!cN) return;
-    var nn = cnom.value.trim().replace(/\s+/g,' ').slice(0,28);
-    if(!nn){ cnom.value = cN.medio || ''; toast('El nombre no puede quedar vacío'); return; }
-    if(nn === cN.medio) return;
-    var iN = cN.medio ? S.medios.indexOf(cN.medio) : -1;
-    if(existeMedio(nn, iN)){ cnom.value = cN.medio || ''; toast('Ya tenés un medio de pago con ese nombre'); return; }
-    if(iN > -1){
-      renombrarMedio(iN, nn);       // deja cN.medio = nn y arrastra los movimientos
-    } else {
-      S.medios.push(nn); desmarcarMedioQuitado(nn); cN.medio = nn;
-    }
-    save(); fillSelects(); render();
-    toast('Ahora se llama "' + nn + '"');
-    return;
-  }
   if(e.target.id === 'avisoHora' || e.target.id === 'avisoMin'){
     S.aviso = avisoCfg();
     var vAv = parseInt(e.target.value, 10) || 0;
@@ -1230,112 +986,9 @@ document.addEventListener('change', function(e){
     toast('Te aviso a las ' + hhmm(S.aviso.hora, S.aviso.min));
     return;
   }
-  var dAp = e.target.closest('[data-dondeap]');
-  if(dAp){
-    var idD = dAp.getAttribute('data-dondeap'), vD = lugarValido(dAp.value);
-    if(apEdit && apEdit.meta === idD) apEdit.lugar = vD;
-    else dondeAp[idD] = vD;
-    return;
-  }
-  var iCt = e.target.closest('[data-icta]');
-  if(iCt){
-    var kCt = iCt.getAttribute('data-icta').split('|'), mCt = metaPorId(kCt[0]), cCt = kCt[1];
-    if(!mCt || !lugarValido(cCt)) return;
-    var pidio = Math.max(0, parseMoney(iCt.value));
-    var puso = ponerEnCuenta(mCt, cCt, pidio);
-    ctaPend[mCt.id] = (ctaPend[mCt.id] || []).filter(function(c){ return c !== cCt; });
-    save(); render();
-    var pr = lugarInicial(mCt);
-    toast(puso > 0
-      ? (money(puso) + ' en ' + nombreLugar(cCt) + ' y ' + money(restoIni(mCt)) + ' en ' + nombreLugar(pr)
-         + (pidio > puso + 0.005 ? ' (no puede ser más que lo que queda)' : ''))
-      : ('Lo de ' + nombreLugar(cCt) + ' vuelve a ' + nombreLugar(pr)));
-    return;
-  }
-  var iEf = e.target.closest('[data-iefec]');
-  if(iEf){
-    var mEf = metaPorId(iEf.getAttribute('data-iefec'));
-    if(!mEf) return;
-    if(lugarInicial(mEf)) juntarCuenta(mEf, lugarInicial(mEf));
-    var pedido = Math.max(0, parseMoney(iEf.value));
-    var puesto = ponerEfectivo(mEf, pedido);
-    if(!(puesto > 0)) delete efecAbierto[mEf.id];
-    save(); render();
-    toast(puesto > 0
-      ? (money(puesto) + ' en efectivo y ' + money(iniArs(mEf)) + ' rindiendo en ' + nombreLugar(lugarInicial(mEf))
-         + (pedido > puesto + 0.005 ? ' (no puede ser más que lo que tenías)' : ''))
-      : 'Todo lo que ya tenías rinde en ' + nombreLugar(lugarInicial(mEf)));
-    return;
-  }
-  var pMo = e.target.closest('[data-pmonto]');
-  if(pMo){
-    var kM = pMo.getAttribute('data-pmonto').split('|'), mM = metaPorId(kM[0]);
-    if(!mM) return;
-    var vM2 = Math.round(Math.max(0, parseMoney(pMo.value)) * 100) / 100;
-    var aM = kM[1] ? aportePorId(mM, kM[1]) : null;
-    var viejo = aM ? (Number(aM.monto)||0) : 0;
-    var tope = iniArs(mM) + viejo;
-    if(vM2 > tope + 0.005){
-      pMo.value = aM ? enCampo(viejo) : '';
-      toast('No puede ser más de ' + money(tope) + ': es todo lo que queda en el primer renglón');
-      return;
-    }
-    if(!aM){
-      if(!(vM2 > 0)) return;
-      var nuevaP = { id:uid(), ts:Date.now(), monto:vM2, fecha:mM.desde, cot:0, mon:'ARS', previo:true, parte:true };
-      ponerLugar(mM, nuevaP, lugarParteNueva(mM));
-      mM.aportes.push(nuevaP);
-      mM.inicial = iniArs(mM) - vM2;
-      delete parteNueva[mM.id]; delete parteNuevaLugar[mM.id];
-      save(); render();
-      var lg = lugarAporte(mM, nuevaP);
-      toast(money(vM2) + (lg ? ' en ' + nombreLugar(lg) : ' guardados aparte') + '. El resto sigue en el primer renglón.');
-      return;
-    }
-    if(!(vM2 > 0)){
-      mM.inicial = iniArs(mM) + viejo;
-      mM.aportes = mM.aportes.filter(function(a){ return a.id !== aM.id; });
-    } else {
-      aM.monto = vM2;
-      mM.inicial = tope - vM2;
-    }
-    save(); render();
-    return;
-  }
-  var pDo = e.target.closest('[data-pdonde]');
-  if(pDo){
-    var kD = pDo.getAttribute('data-pdonde').split('|'), mD2 = metaPorId(kD[0]);
-    if(!mD2) return;
-    if(!kD[1]){ parteNuevaLugar[mD2.id] = lugarValido(pDo.value); return; }
-    var aD = aportePorId(mD2, kD[1]);
-    if(!aD) return;
-    ponerLugar(mD2, aD, lugarValido(pDo.value));
-    save(); render();
-    var lD = lugarAporte(mD2, aD);
-    toast(money(Number(aD.monto)||0) + (lD ? ' ahora están en ' + nombreLugar(lD) : ' ahora están guardados aparte'));
-    return;
-  }
-  var mDo = e.target.closest('[data-mdonde]');
-  if(mDo){
-    var vM = lugarValido(mDo.value), metaD = null;
-    S.metas.forEach(function(mm){ if(mm.id === mDo.getAttribute('data-mdonde')) metaD = mm; });
-    if(!metaD) return;
-    metaD.rinde = !!vM;
-    if(vM) metaD.cuenta = vM; else delete metaD.cuenta;
-    save(); render();
-    toast(vM ? ('Lo que ya tenías está en ' + nombreLugar(vM)) : 'Lo que ya tenías está guardado aparte');
-    return;
-  }
-  if(e.target.id === 'dolarTipo'){ elegirDolar(e.target.value); return; }
   if(e.target.id === 'dolarVenta'){
     var cot = Math.max(0, parseMoney(e.target.value));
-    S.dolar = S.dolar || {}; S.dolar.tipos = S.dolar.tipos || {};
-    S.dolar.venta = cot;
-    S.dolar.fecha = today();
-    S.dolar.auto = false;
-    // la escrita a mano queda guardada en su tipo, así no se pierde al cambiar
-    if(cot > 0) S.dolar.tipos[tipoDolar()] = { venta:cot, fecha:today() };
-    else delete S.dolar.tipos[tipoDolar()];
+    S.dolar = { venta:cot, fecha:today() };
     save(); render();
   }
 });

@@ -12,7 +12,6 @@
 .mark.cuota{background:var(--cuota-soft);color:var(--cuota)}
 .mark.meta{background:var(--meta-soft);color:var(--meta)}
 .mark.carry{background:var(--surface-2);color:var(--ink-2)}
-.mark.tasa{background:var(--in-soft);color:var(--in)}
 .mark.saca{background:var(--surface-2);color:var(--meta)}
 .mark.fijo{background:var(--out-soft);color:var(--out)}
 .mark.pase{background:var(--surface-2);color:var(--ink-2)}
@@ -22,7 +21,7 @@
    elegís vos, podés tener un grupo verde, y ahí un gasto y un ingreso serían
    del mismo color. Con el bloque lleno se siguen distinguiendo igual. */
 .mark.llena{color:var(--surface)}
-.mark.llena.in,.mark.llena.tasa{background:var(--in)}
+.mark.llena.in{background:var(--in)}
 .mark.llena.meta{background:var(--meta)}
 .mark.llena.saca{background:var(--ink-2)}
 .mark.llena.out,.mark.llena.cuota,.mark.llena.fijo{background:var(--out)}
@@ -32,68 +31,15 @@
 .pase-box h3{margin:0 0 10px;font-size:14px;font-weight:600}
 .pase-box .pista{margin-top:10px}
 #paseLink{margin:12px 0 0}
-/* Tus dispositivos: el celular y la compu con los mismos datos. */
-#cardDisp .vj-auto{margin:0 0 10px}
-.dv-lista{margin:0 0 12px;padding:0;list-style:none;display:grid;gap:6px}
-.dv-lista li{font-size:13.5px;color:var(--ink-2);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
-.dv-lista li b{color:var(--ink);font-weight:600}
-.dv-caja{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
-.dv-caja textarea{width:100%;display:block;resize:vertical;font-family:var(--f-mono);font-size:12px;word-break:break-all;line-height:1.4}
-.dv-caja p{margin:0 0 8px}
-.dv-caja .rowflex{margin-top:8px;gap:8px}
-.dv-preg{border:2px solid var(--meta);background:var(--meta-soft)}
-/* v265: pasar los datos con un QR, y las copias en la misma tarjeta */
-.dv-copias{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
-.dv-h3{font-size:14.5px;font-weight:600;margin:0 0 4px;color:var(--ink)}
-.dv-pasar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 10px}
-.dv-pasar .btn{flex-direction:column;align-items:flex-start;text-align:left;gap:3px;padding:12px 13px;height:auto;min-height:72px;white-space:normal;line-height:1.25}
-.dv-pasar .btn b{font-weight:600;font-size:14px}
-.dv-pasar .btn span{font-size:12px;font-weight:400;opacity:.85}
-.dv-pasar svg{width:20px;height:20px;margin-bottom:2px}
-@media (max-width:420px){ .dv-pasar{grid-template-columns:1fr} .dv-pasar .btn{min-height:0} }
-/* v267: "Traer / Pasar" como un deslizador: el color se corre al que elegiste y
-   queda arriba mientras se ve el QR, para recordar para dónde van los datos */
-.dv-slider{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:4px;margin:0 0 10px;border:1px solid var(--line);border-radius:16px;background:var(--surface-2)}
-.dv-sl-luz{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:12px;background:var(--btn);
-  box-shadow:0 2px 10px rgba(0,0,0,.14);transition:transform .32s cubic-bezier(.3,.7,.2,1)}
-.dv-slider[data-sel="dar"] .dv-sl-luz{transform:translateX(100%)}
-.dv-slider button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;background:none;border:0;
-  border-radius:12px;padding:11px 12px;color:var(--ink-2);font:inherit;cursor:pointer;transition:color .25s;-webkit-tap-highlight-color:transparent;min-width:0}
-.dv-slider button b{font-weight:600;font-size:14px;color:inherit;line-height:1.25}
-.dv-slider button span{font-size:12px;opacity:.85;line-height:1.3}
-.dv-slider svg{width:20px;height:20px;margin-bottom:2px;flex:none}
-.dv-slider[data-sel="traer"] [data-dv="qrtraer"],.dv-slider[data-sel="dar"] [data-dv="qrdar"]{color:var(--btn-ink)}
-.dv-slider button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.dv-slider + .dv-caja{margin-top:0}
-/* v273: con datos cargados, traer los de otro queda como opción discreta */
-.dv-alt{margin:-2px 0 12px;font-size:12.5px;line-height:1.4}
-.dv-alt button{background:none;border:0;padding:4px 0;color:var(--ink-3);font:inherit;text-align:left;cursor:pointer;
-  text-decoration:underline;text-decoration-color:color-mix(in srgb, currentColor 45%, transparent);text-underline-offset:3px}
-.dv-alt button:hover{color:var(--ink-2)}
-.dv-pasar + .dv-caja{margin-top:0}
-.dv-otra{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.dv-otra .note{margin:0;flex:1 1 100%}
-.dv-otra .btn{gap:7px}
-.dv-otra .btn svg{width:17px;height:17px;flex:none}
-.dv-codigo{margin:2px 0 6px;font-family:var(--f-mono);font-size:24px;font-weight:500;letter-spacing:.1em;color:var(--ink);text-align:center;font-variant-numeric:tabular-nums;word-spacing:.2em}
-.dv-qrcaja .vj-qr{margin:6px 0 4px}
-.dv-qrcaja .vj-qrsvg{width:min(100%,250px)}
-.dv-qrcaja > p.note{text-align:center}
-.dv-codin{width:100%;font-family:var(--f-mono);font-size:20px;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-top:6px}
-.dv-busca{display:flex;gap:10px;align-items:center}
-.dv-busca i{width:16px;height:16px;flex:none;border-radius:50%;border:2px solid var(--acc);border-right-color:transparent;animation:dvGira .8s linear infinite}
-@keyframes dvGira{to{transform:rotate(360deg)}}
-/* la cámara */
-#qrScan{position:fixed;inset:0;z-index:96;background:#060a14;display:flex;align-items:center;justify-content:center;padding:16px}
-#qrScan[hidden]{display:none}
-#qrScan .qs-caja{width:min(400px,100%);display:flex;flex-direction:column;align-items:center;gap:14px;color:#fff;text-align:center}
-#qrScan .qs-tit{margin:0;font-size:17px;font-weight:600}
-#qrScan .qs-visor{position:relative;width:min(78vw,340px);aspect-ratio:1;border-radius:22px;overflow:hidden;background:#000}
-#qrScan video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-#qrScan .qs-marco{position:absolute;inset:14%;border-radius:16px;box-shadow:0 0 0 999px rgba(0,0,0,.35);border:3px solid rgba(255,255,255,.9)}
-#qrScan .qs-nota{margin:0;font-size:14px;line-height:1.45;color:rgba(255,255,255,.85);max-width:320px}
-#qrScan .qs-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-#qrScan .btn.ghost{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.08)}
+/* Tu cuenta y tus datos (Ajustes), y las cajas del grupo familiar. */
+#cardDisp .estado-base{margin:0 0 10px}
+.caja{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+.caja textarea{width:100%;display:block;resize:vertical;font-family:var(--f-mono);font-size:12px;word-break:break-all;line-height:1.4}
+.caja p{margin:0 0 8px}
+.caja .rowflex{margin-top:8px;gap:8px}
+.caja-preg{border:2px solid var(--meta);background:var(--meta-soft)}
+.copias{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.sub-h3{font-size:14.5px;font-weight:600;margin:0 0 4px;color:var(--ink)}
 /* Grupo familiar: quién cargó cada cosa, los gastos a medias y el filtro de arriba. */
 .verq{margin:0 0 14px}
 .verq .seg{width:100%;overflow-x:auto}
@@ -178,76 +124,22 @@
 .qico svg{display:block;width:100%;height:100%}
 .bud .l3{margin-top:8px}
 .bud .l3 .btn{text-align:left;line-height:1.3;padding-top:7px;padding-bottom:7px}
-.fm-per .fm-cero{grid-column:1/-1;color:var(--ink-3);font-size:12.5px;margin-top:2px}
 .fm-trae .seg{margin-top:4px}
 .fm-trae .note{margin:8px 0 0}
-.dv-verif{margin:4px 0 8px;font-family:var(--f-mono);font-size:26px;font-weight:500;letter-spacing:.08em;color:var(--ink);font-variant-numeric:tabular-nums}
+.codigo-grande{margin:4px 0 8px;font-family:var(--f-mono);font-size:26px;font-weight:500;letter-spacing:.08em;color:var(--ink);font-variant-numeric:tabular-nums}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chips button{border:1px solid var(--hueco-borde);background:var(--vidrio-2);color:var(--ink-2);border-radius:999px;padding:7px 13px;font-size:13.5px;cursor:pointer;font-family:inherit}
 .chips button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft);color:var(--acc);font-weight:500}
 .chip{border:1px solid var(--hueco-borde);background:var(--vidrio-2);color:var(--ink-2);border-radius:999px;padding:7px 14px;font-size:13.5px;cursor:pointer;font-family:inherit;white-space:nowrap}
 .chip[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft);color:var(--acc);font-weight:500}
-.previo.rinde{margin-top:10px;grid-template-columns:minmax(0,1fr) minmax(130px,200px)}
-.previo.rinde select{min-width:0}
-@media (max-width:520px){ .previo.rinde{grid-template-columns:1fr} }
-.rinde-res{margin:10px 0 0}
 .aviso-lleno{margin-bottom:14px;border-color:var(--warn)}
 .aviso-lleno h2{color:var(--warn)}
 .aviso-lleno .card-head{margin-bottom:2px}
 .aviso-lleno.grave{border-color:var(--out);border-width:2px}
 .aviso-lleno.grave h2{color:var(--out)}
-/* ---- el interruptor "Rinde" ----
-   El mismo control en los tres lugares donde se dice dónde está la plata: al
-   crear la meta, adentro de la meta (lo que ya tenías) y en cada aporte.
-   Prendido, aparecen tus cuentas como botones y se toca la que es. */
-.rctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-width:0}
-.rctl .rsw{margin-top:0;font-size:14px;font-weight:500;color:var(--ink-2)}
-.rctl.on .rsw{color:var(--acc)}
-.rctl .rsw:disabled{opacity:.55;cursor:default}
-.rchips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
-.rchip{padding:6px 11px;font-size:13px}
-.rchip small{font-family:var(--f-mono);font-size:11px;opacity:.8;margin-left:3px}
-.rchip:disabled{opacity:.6;cursor:default}
-.rnota{font-size:12px;color:var(--ink-3);line-height:1.35}
 .linkbtn{background:none;border:0;padding:2px 0;color:var(--acc);font:inherit;font-size:13px;font-weight:500;
   cursor:pointer;justify-self:start;align-self:flex-start;text-align:left}
 .linkbtn:hover{text-decoration:underline}
-/* Un renglón por lugar: la etiqueta arriba y, abajo, la casilla con su × al
-   lado. La casilla tiene un ancho tope, así la × queda pegada a SU casilla y no
-   perdida en la otra punta de la pantalla, y entre renglón y renglón hay aire
-   suficiente para que no se lea la etiqueta de abajo como si fuera de la casilla
-   de arriba. */
-.refec{display:grid;grid-template-columns:minmax(0,230px) 32px;column-gap:6px;row-gap:6px;align-items:center}
-.refec .lab{grid-column:1/-1;margin:0}
-.refec .iconbtn{justify-self:start}
-.donde-nueva{gap:14px}
-.donde-nueva > .lab{margin-bottom:-6px}
-.donde-nueva .pista{margin-top:-4px}
-.previo.donde{grid-template-columns:1fr;gap:14px}
-.rleg{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)}
-/* Repartido en varias cuentas: un renglón por cuenta. La primera se queda con
-   "lo que queda", así el total nunca cambia; las otras llevan su monto. */
-.rotras{display:grid;gap:16px}
-.rotras:empty{display:none}
-.refec .resto-v{font-family:var(--f-mono);font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums;
-  white-space:nowrap}
-.refec .resto-v small{font-family:var(--f-body);font-size:11.5px;color:var(--ink-3);margin-left:4px}
-.rnota.pie{display:block;margin-top:1px}
-/* Lo que ya tenías, repartido en varios lugares: un renglón por lugar. */
-.previo.rinde.repartido{grid-template-columns:1fr}
-.partes{display:grid;gap:8px;margin-top:8px}
-.parte{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) 30px;gap:10px;align-items:center}
-.parte select{min-width:0}
-.parte .pctin.plata input[readonly]{padding-left:8px}
-.partes .padd{justify-self:start}
-/* En el teléfono el lugar no entra al lado del monto ("Mercado Pago · rinde
-   19,63%" es largo): cada parte ocupa dos renglones, monto arriba y lugar abajo. */
-@media (max-width:460px){
-  .partes{gap:12px}
-  .parte{grid-template-columns:minmax(0,1fr) 30px;row-gap:6px}
-  .parte select{grid-column:1/-1;grid-row:2}
-  .parte + .parte{padding-top:12px;border-top:1px dashed var(--line)}
-}
 /* "Esta plata es de otro mes": la recomendación va adentro del formulario, en
    el lugar de los botones, con el color de las metas. */
 .preg-ap{padding:12px 13px;border-radius:12px;background:var(--meta-soft);border:1px solid var(--hueco-borde)}

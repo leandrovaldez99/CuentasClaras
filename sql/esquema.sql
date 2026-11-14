@@ -91,7 +91,6 @@ create table public.movimientos (
   persona_id  text,                              -- de quién es (grupo familiar)
   cargado_por text,
   a_medias    jsonb,                             -- entre qué personas se divide
-  viaje_id    text,
   orden       bigint not null default 0,
   extra       jsonb not null default '{}',
   primary key (espacio_id, id),
@@ -172,19 +171,6 @@ create table public.pases (
 );
 
 -- ---------------------------------------------------------------- ahorro
-create table public.cuentas_rinden (
-  espacio_id uuid not null references public.espacios(id) on delete cascade,
-  id         text not null,
-  entidad    text,                               -- banco o billetera
-  tna        numeric,
-  manual     boolean,
-  medio_id   text,
-  orden      integer not null default 0,
-  extra      jsonb not null default '{}',
-  primary key (espacio_id, id),
-  foreign key (espacio_id, medio_id) references public.medios_pago(espacio_id, id) on delete set null (medio_id)
-);
-
 create table public.metas_ahorro (
   espacio_id uuid not null references public.espacios(id) on delete cascade,
   id         text not null,
@@ -192,11 +178,9 @@ create table public.metas_ahorro (
   objetivo   numeric,
   moneda     text,
   desde      date,
-  cuenta_id  text,
   orden      integer not null default 0,
   extra      jsonb not null default '{}',
-  primary key (espacio_id, id),
-  foreign key (espacio_id, cuenta_id) references public.cuentas_rinden(espacio_id, id) on delete set null (cuenta_id)
+  primary key (espacio_id, id)
 );
 
 create table public.aportes (
@@ -207,72 +191,18 @@ create table public.aportes (
   fecha      date,
   moneda     text,
   cotizacion numeric,
-  cuenta_id  text,
   persona_id text,
   orden      bigint not null default 0,
   extra      jsonb not null default '{}',
   primary key (espacio_id, meta_id, id),
-  foreign key (espacio_id, meta_id)    references public.metas_ahorro(espacio_id, id)   on delete cascade,
-  foreign key (espacio_id, cuenta_id)  references public.cuentas_rinden(espacio_id, id) on delete set null (cuenta_id),
-  foreign key (espacio_id, persona_id) references public.personas(espacio_id, id)       on delete set null (persona_id)
-);
-
-create table public.horas_extras (
-  espacio_id uuid not null references public.espacios(id) on delete cascade,
-  id         text not null,
-  fecha      date,
-  horas      numeric not null,
-  recargo    numeric,                            -- porcentaje de recargo
-  persona_id text,
-  orden      bigint not null default 0,
-  extra      jsonb not null default '{}',
-  primary key (espacio_id, id),
-  foreign key (espacio_id, persona_id) references public.personas(espacio_id, id) on delete set null (persona_id)
-);
-
--- ---------------------------------------------------------------- viajes
-create table public.viajes (
-  espacio_id uuid not null references public.espacios(id) on delete cascade,
-  id         text not null,
-  nombre     text not null,
-  clave      text,
-  creado_el  timestamptz,
-  orden      integer not null default 0,
-  extra      jsonb not null default '{}',
-  primary key (espacio_id, id)
-);
-
-create table public.viaje_miembros (
-  espacio_id uuid not null,
-  viaje_id   text not null,
-  id         text not null,
-  nombre     text not null,
-  orden      integer not null default 0,
-  extra      jsonb not null default '{}',
-  primary key (espacio_id, viaje_id, id),
-  foreign key (espacio_id, viaje_id) references public.viajes(espacio_id, id) on delete cascade
-);
-
-create table public.viaje_gastos (
-  espacio_id  uuid not null,
-  viaje_id    text not null,
-  id          text not null,
-  pagado_por  text,
-  monto       numeric not null,
-  descripcion text,
-  categoria   text,
-  fecha       date,
-  orden       integer not null default 0,
-  extra       jsonb not null default '{}',
-  primary key (espacio_id, viaje_id, id),
-  foreign key (espacio_id, viaje_id) references public.viajes(espacio_id, id) on delete cascade,
-  foreign key (espacio_id, viaje_id, pagado_por) references public.viaje_miembros(espacio_id, viaje_id, id) on delete set null (pagado_por)
+  foreign key (espacio_id, meta_id)    references public.metas_ahorro(espacio_id, id) on delete cascade,
+  foreign key (espacio_id, persona_id) references public.personas(espacio_id, id)     on delete set null (persona_id)
 );
 
 -- ---------------------------------------------------------------- configuración del espacio
 create table public.ajustes (
   espacio_id    uuid primary key references public.espacios(id) on delete cascade,
-  datos         jsonb not null default '{}',     -- presupuestos, orden de los paneles, reparto del grupo, recordatorio…
+  datos         jsonb not null default '{}',     -- presupuestos, orden de los paneles, reparto del grupo, dólar, recordatorio…
   modificado_el timestamptz not null default now()
 );
 
@@ -311,8 +241,7 @@ do $$
 declare t text;
 begin
   foreach t in array array['personas', 'medios_pago', 'grupos_categorias', 'categorias', 'movimientos', 'compras_cuotas',
-                           'gastos_fijos', 'precios_fijo', 'pases', 'cuentas_rinden', 'metas_ahorro', 'aportes',
-                           'horas_extras', 'viajes', 'viaje_miembros', 'viaje_gastos', 'ajustes'] loop
+                           'gastos_fijos', 'precios_fijo', 'pases', 'metas_ahorro', 'aportes', 'ajustes'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('create policy %I on public.%I for all to authenticated using (public.es_miembro(espacio_id)) with check (public.es_miembro(espacio_id))', t || '_del_espacio', t);
   end loop;

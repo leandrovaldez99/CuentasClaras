@@ -354,7 +354,7 @@ function vozHistorial(){
       t.n++; t.c[cat] = (t.c[cat] || 0) + 1;
     });
   }
-  (S.tx || []).slice(-800).forEach(function(t){ if(!t.viaje && !t.sac && !t.hx) sumar(t.tipo === 'ingreso' ? 'ingreso' : 'gasto', t.nota, t.cat); });
+  (S.tx || []).slice(-800).forEach(function(t){ sumar(t.tipo === 'ingreso' ? 'ingreso' : 'gasto', t.nota, t.cat); });
   (S.planes || []).forEach(function(p){ sumar('gasto', p.desc, p.cat); });
   (S.fijos || []).forEach(function(f){ sumar(f.tipo === 'ingreso' ? 'ingreso' : 'gasto', f.nombre, f.cat); });
   return (_vozHist = h);
@@ -451,7 +451,7 @@ function vozPintar(){
     fab.setAttribute('aria-label', vozOyendo ? 'Te escucho' : (vozHayMic() ? 'Cargar (mantené apretado para dictar)' : 'Cargar'));
   }
   var box = $('#vozBox'); if(!box) return;
-  box.hidden = !!editando || !!editandoPlan || cargaTab === 'viaje';
+  box.hidden = !!editando || !!editandoPlan;
   var mic = $('#vozMic'), hay = vozHayMic();
   if(mic){
     mic.hidden = !hay || box.hidden;
@@ -672,7 +672,6 @@ function vozFabEmpezar(){
   try{ if(navigator.vibrate) navigator.vibrate(20); }catch(x){}
   if(editando) salirEdit();
   if(editandoPlan) salirEditPlan();
-  if(cargaTab === 'viaje'){ cargaTab = tipoMov === 'ingreso' ? 'ingreso' : 'gasto'; tipoMov = cargaTab; }
   if(vista !== 'cargar') go('cargar'); else { pintarCarga(); window.scrollTo(0, 0); }
   vozLimpiar(false);
   if(vozAlSoltar()){

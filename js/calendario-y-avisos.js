@@ -10,10 +10,7 @@
    ese día: si el martes compraste en el súper y pagaste el gimnasio, el martes
    tiene las dos franjas. El color es el del grupo, no el de la categoría —ocho
    colores se distinguen de un vistazo, veinte categorías no—, y tocando un día
-   se abre el detalle con todo lo que pasó, categoría por categoría.
-
-   Los intereses quedan afuera del cuadrito a propósito: caen todos los días y
-   pintarían el mes entero de un solo color. En el detalle del día sí están. */
+   se abre el detalle con todo lo que pasó, categoría por categoría. */
 function calendarioDelMes(ym){
   var out = {};
   function dia(f){
@@ -44,7 +41,7 @@ function calendarioDelMes(ym){
   });
   return out;
 }
-/* Todo lo que pasó un día, para el detalle: ahí sí entran los intereses. */
+/* Todo lo que pasó un día, para el detalle. */
 function movimientosDelDia(f){
   var ym = ymOf(f), out = [];
   var idxD = indiceTx();
@@ -54,7 +51,6 @@ function movimientosDelDia(f){
   S.metas.forEach(function(m){
     (m.aportes||[]).forEach(function(a){ if(!a.previo && a.fecha === f && esDeVista(a)) out.push({ r:recencia(a, 0), ap:a, meta:m }); });
   });
-  interesesDias(ym).forEach(function(x){ if(x.fecha === f) out.push({ r:-3, itr:x.monto, cuenta:x.cuenta }); });
   (S.pases||[]).forEach(function(p, i){ if(p.fecha === f && esDeVista(p)) out.push({ r:recencia(p, i), pase:p }); });
   return out.sort(function(a,b){ return b.r - a.r; });
 }
@@ -185,14 +181,12 @@ function pintarDia(){
   var f = diaAbierto;
   var info = calendarioDelMes(ymOf(f))[f];
   var items = movimientosDelDia(f);
-  var intereses = items.reduce(function(a,x){ return a + (x.itr || 0); }, 0);
 
   $('#lupaDiaTit').textContent = tituloDia(f);
   var partes = [];
   if(info && info.gasto > 0) partes.push('gastaste ' + money(info.gasto));
   if(info && info.ingreso > 0) partes.push('entró ' + money(info.ingreso));
   if(info && info.ahorro > 0) partes.push('apartaste ' + money(info.ahorro));
-  if(intereses > 0) partes.push('rindió ' + money(intereses));
   $('#lupaDiaSub').textContent = partes.length
     ? (partes.join(' · ') + (f === today() ? ' · es hoy' : ''))
     : 'No cargaste nada este día';
@@ -211,7 +205,6 @@ function pintarDia(){
         if(x.pase) return rowPase(x.pase, false, true);
         if(x.cuota) return rowCuota(x.cuota, true);
         if(x.fijo) return rowFijo(x.fijo.fijo, x.fijo.monto, x.fijo.fecha, x.fijo.propio, x.fijo.pend, true, x.fijo);
-        if(x.itr !== undefined) return rowInteres(x.fecha || f, x.itr, x.cuenta, true);
         return rowAporte(x.ap, x.meta, true);
       }).join('')
     : emptyBox('Ese día no cargaste ningún movimiento');
@@ -223,7 +216,6 @@ function pintarDia(){
     });
     nota.textContent = items.length
       ? ((hayGasto ? 'Cada gasto lleva el color de su grupo. ' : '')
-         + (intereses > 0 ? 'Los intereses no pintan el calendario: caen todos los días. ' : '')
          + 'Las flechas de arriba te mueven de día.')
       : '';
   }

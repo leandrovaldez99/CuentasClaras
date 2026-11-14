@@ -8,12 +8,12 @@ Cada usuario entra con su cuenta (email y contraseña) y sus datos se guardan en
 
 - Carga de gastos e ingresos (también por voz) con categoría, medio de pago y fecha.
 - Compras en cuotas y gastos/ingresos fijos que se suman solos cada mes.
-- Saldo por medio de pago y cuentas que rinden (TNA de bancos y billeteras).
-- Metas de ahorro, presupuestos por grupo de categorías y resumen del mes.
+- Saldo por medio de pago, y pases de plata de un medio a otro.
+- Metas de ahorro (en pesos o en dólares), presupuestos por grupo de categorías y resumen del mes.
+- Montos en dólares, con la cotización que escribe el usuario.
 - Cuenta por usuario: los datos están en la base y se ven desde cualquier navegador.
 - Grupo familiar con gastos a medias y pendientes entre las personas: se invita con un código y cada uno entra con su cuenta.
-- Gastos de viaje compartidos y división de gastos.
-- Calculadoras: cuotas o contado, conversor de monedas y horas extras.
+- Herramientas: gastos fijos, dividir gastos y grupo familiar.
 
 ## Cómo está organizado el código
 
@@ -33,23 +33,22 @@ js/                     El código, un archivo por tema
   utilidades.js           fechas, formato de plata, ids
   estado.js               el estado de la app y los datos de fábrica
   persistencia.js         guardar, leer y validar los datos
-  tasas-y-dolar.js        datos de afuera: tasas y cotizaciones
-  calculos.js             cuotas, fijos, días hábiles, metas y resumen del mes
-  cuentas-y-saldos.js     intereses de las cuentas que rinden y saldo por medio
+  calculos.js             cuotas, fijos, días hábiles y feriados, metas de ahorro
+  cuentas-y-saldos.js     el resumen del mes y el saldo de cada medio de pago
   render.js               dibujar la pantalla
   resumen.js · movimientos.js · cuotas.js · gastos-fijos.js · ahorros.js · ajustes.js
   colores-y-paneles.js · interaccion.js · calendario-y-avisos.js
   eventos.js              qué pasa al tocar cada botón o guardar un formulario
-  calculadoras.js · dividir-gastos.js
-  viajes.js · viajes-pantalla.js
-  grupo-familiar.js · dispositivos.js · sincronizacion.js
+  dividir-gastos.js
+  grupo-familiar.js       el grupo: personas, gastos a medias, invitar con un código
   voz.js · paseo.js · controles.js
   base-de-datos.js        la capa de datos: pasa lo de la app a las tablas y al revés
   cuenta.js               entrar, crear la cuenta y cerrar sesión
   arranque.js             lo último que corre: prepara todo y carga los datos
-  lib/                    librerías de terceros (el cliente de Supabase, entre otras)
+  lib/supabase.js         el cliente de Supabase (librería de terceros)
 sql/
   esquema.sql             las tablas, las relaciones y los permisos de la base de datos
+  migracion-02-app-simple.sql   para pasar una base creada con la versión anterior
 ```
 
 Los archivos de `js/` se cargan en orden desde `index.html` y comparten el mismo espacio de nombres: lo que define uno lo pueden usar los que siguen.
@@ -71,11 +70,8 @@ Es PostgreSQL. Todo el esquema está en [`sql/esquema.sql`](sql/esquema.sql).
 | `compras_cuotas` | las compras en cuotas | `categorias`, `medios_pago`, `personas` |
 | `gastos_fijos`, `precios_fijo` | lo que se repite todos los meses, y su precio a lo largo del tiempo | `categorias`, `medios_pago`, `personas` |
 | `pases` | plata que pasa de un medio a otro | `medios_pago` (origen y destino) |
-| `cuentas_rinden` | las cuentas que dan interés (TNA) | `medios_pago` |
-| `metas_ahorro`, `aportes` | las metas y lo que se fue poniendo | `cuentas_rinden`, `personas` |
-| `horas_extras` | las horas extras anotadas | `personas` |
-| `viajes`, `viaje_miembros`, `viaje_gastos` | los gastos de un viaje compartido | entre sí |
-| `ajustes` | la configuración del espacio (presupuestos, orden de los paneles, reparto) | `espacios` |
+| `metas_ahorro`, `aportes` | las metas y lo que se fue poniendo | `personas` |
+| `ajustes` | la configuración del espacio (presupuestos, orden de los paneles, reparto, dólar) | `espacios` |
 
 Las columnas guardan lo que hace falta para consultar y relacionar (montos, fechas, claves foráneas). Los datos internos de la app que no se consultan van en una columna `extra` de tipo `jsonb`.
 

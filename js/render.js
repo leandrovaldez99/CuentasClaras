@@ -1,5 +1,5 @@
 /* Cuentas Claras · js/render.js
-   Dibujar la pantalla: la función render() y lo general (paneles, fondo, herramientas favoritas).
+   Dibujar la pantalla: la función render() y lo general (paneles, fondo).
 
    Todos los archivos de js/ comparten el mismo espacio de nombres: se cargan en
    orden desde index.html y lo que define uno lo pueden usar los que siguen. */
@@ -171,66 +171,8 @@ window.addEventListener('scroll', function(){
   _scrollT = setTimeout(function(){ _scrollT = null; h.classList.remove('scrolleando'); }, 450);
 }, { passive:true, capture:true });
 window.addEventListener('orientationchange', function(){ setTimeout(repintarFondo, 300); });
-/* ---- v289: herramientas favoritas ----
-   Cada herramienta tiene una estrella; las marcadas suben a "Tus favoritas",
-   arriba de Herramientas. Se guardan en este dispositivo (cada uno elige las suyas). */
-var FAV_KEY = 'plata-clara-favs';
-var FAV_ICO = {
-  dividir:'<circle cx="8" cy="8" r="3"/><circle cx="16" cy="16" r="3"/><path d="M5 19L19 5"/>',
-  fijos:'<path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.2"/>',
-  cyc:'<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 7h8M8 12h2M14 12h2M8 16h2M14 16h2"/>',
-  conv:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
-  hext:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
-  familia:'<circle cx="9" cy="8" r="3"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.3"/><path d="M16.5 13.6c2.6.2 4.5 2.1 4.5 5"/>',
-  viaje:'<path d="M3 13l18-7-7 18-2.5-8.5L3 13z"/>'
-};
-var FAV_NOM = { dividir:'Dividir gastos', fijos:'Gastos fijos', cyc:'¿Cuotas o contado?', conv:'Conversor', hext:'Horas extras', familia:'Grupo familiar', viaje:'Viaje' };
-function favsLeer(){
-  try{ var a = JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); return Array.isArray(a) ? a.filter(function(k){ return FAV_NOM[k]; }) : []; }catch(e){ return []; }
-}
-function favsGuardar(a){ try{ localStorage.setItem(FAV_KEY, JSON.stringify(a)); }catch(e){} }
-function estrellaSvg(on){
-  return '<svg viewBox="0 0 24 24" fill="'+(on ? 'currentColor' : 'none')+'" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>';
-}
-function pintarFavs(){
-  var v = $('#v-tools'); if(!v) return;
-  var favs = favsLeer();
-  [].slice.call(v.querySelectorAll('.tool')).forEach(function(t){
-    var b = t.querySelector(':scope > [data-go]'), w = t.querySelector('.tool-acc');
-    if(b && !w){
-      w = document.createElement('div'); w.className = 'tool-acc';
-      b.parentNode.insertBefore(w, b);
-      var e = document.createElement('button');
-      e.type = 'button'; e.className = 'estr'; e.setAttribute('data-fav', b.getAttribute('data-go'));
-      w.appendChild(e); w.appendChild(b);
-    }
-    var st = t.querySelector('[data-fav]'); if(!st) return;
-    var k = st.getAttribute('data-fav'), on = favs.indexOf(k) >= 0;
-    st.classList.toggle('on', on);
-    st.setAttribute('aria-pressed', on ? 'true' : 'false');
-    st.setAttribute('aria-label', (on ? 'Sacar de favoritas: ' : 'Marcar como favorita: ') + (FAV_NOM[k] || k));
-    st.title = on ? 'Sacar de favoritas' : 'Marcar como favorita';
-    st.innerHTML = estrellaSvg(on);
-  });
-  var card = $('#favCard'), lst = $('#favList');
-  if(!card || !lst) return;
-  card.hidden = !favs.length;
-  lst.innerHTML = favs.map(function(k){
-    return '<button class="fav" type="button" data-go="'+k+'"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-      + FAV_ICO[k] + '</svg></i><b>'+esc(FAV_NOM[k])+'</b></button>';
-  }).join('');
-}
-document.addEventListener('click', function(e){
-  var st = e.target.closest && e.target.closest('[data-fav]'); if(!st) return;
-  var k = st.getAttribute('data-fav'), a = favsLeer(), i = a.indexOf(k);
-  if(i >= 0) a.splice(i, 1); else a.push(k);
-  favsGuardar(a); pintarFavs();
-  toast(i >= 0 ? FAV_NOM[k] + ': fuera de favoritas' : FAV_NOM[k] + ': en tus favoritas, arriba de todo');
-});
-
 function render(){
   arrOlvidar();
-  pintarFavs();
   $('#mesLab').textContent = ymLabel(mes);
   $('#mesLabSm').textContent = ymLabel(mes, true);
   $('#mesLabMd').textContent = ymLabel(mes, 'mini') + ' ' + mes.slice(0, 4);
@@ -242,7 +184,6 @@ function render(){
   renderFijos();
   renderDolar();
   pintarCarga();
-  renderCuentas();
   renderArr();
   renderAviso();
   pintarMoneda();
@@ -252,17 +193,11 @@ function render(){
   renderPresuEdit();
   pintarQuienForms();
   pintarVerQuien();
-  // la pantalla del viaje se redibuja sola cuando la tocás: redibujarla acá
-  // (llega el dólar, se actualizan las tasas) borraría el gasto a medio escribir
-  if(vista !== 'viaje' && !vjEnCarga()) renderViaje();
-  if(vista === 'conv') renderConv();     // llegó el dólar nuevo
-  if(vista === 'hext') renderHx();      // cambió el mes, o llegó algo de otro dispositivo
   pintarFechas();
 }
 
 function renderAjustes(){
   pintarEspacio();
-  renderDisp();
   var d = $('#dondeGuarda'); if(!d) return;
   cuentaPintarAjustes();
   d.textContent = (modo === 'base' && dbSes.usuario)

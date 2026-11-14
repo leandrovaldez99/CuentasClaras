@@ -143,7 +143,7 @@ function cuentaEntro(ses){
     cuentaMostrar('cargando', 'Trayendo tus datos…');
   } else cuentaOcultar();                               // ya tiene sus datos acá: entra directo y se actualiza por atrás
   modo = 'base';
-  dbTraer().then(function(){ cuentaOcultar(); renderAjustes(); nsRevisar(); })
+  dbTraer().then(function(){ cuentaOcultar(); renderAjustes(); })
     .catch(function(e){
       if(conocido){ dbPintarEstado(); return; }         // sin conexión: sigue con lo que tiene en este navegador
       cuentaMostrar('error', /sin_perfil|sin_espacio/.test(String(e && e.message))
@@ -183,7 +183,7 @@ function cuentaPintarAjustes(){
     return;
   }
   var e = dbEstadoTxt();
-  el.innerHTML = '<p class="vj-auto ' + e[0] + '" id="cuentaEstado" role="status"><i aria-hidden="true"></i><span>' + esc(e[1]) + '</span></p>'
+  el.innerHTML = '<p class="estado-base ' + e[0] + '" id="cuentaEstado" role="status"><i aria-hidden="true"></i><span>' + esc(e[1]) + '</span></p>'
     + '<p class="note" style="margin:8px 0 12px">Entraste como <b>' + esc(dbSes.email) + '</b>. Tus datos están en tu cuenta: los ves en cualquier navegador donde entres.</p>'
     + '<button class="btn ghost sm' + (cuentaSalirArmado ? ' peligro' : '') + '" type="button" data-cuenta="salir">'
     + (cuentaSalirArmado ? 'Cerrar sesión igual' : 'Cerrar sesión') + '</button>';

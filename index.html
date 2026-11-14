@@ -204,6 +204,9 @@
                   <input id="mFecha" type="date" aria-label="Fecha del movimiento" tabindex="-1">
                   <button type="button" class="datebtn" aria-label="Elegir fecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="d-lg">—</span><span class="d-sm">—</span></button>
                 </span></div>
+              <div class="field full cotmano" id="mCotBox" hidden><label class="lab" for="mCot">A cuánto estaba el dólar</label>
+                <span class="pctin plata"><i>$</i><input class="money-in" id="mCot" type="text" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Cuántos pesos era un dólar"></span>
+                <small class="pista">Lo escribís vos. Queda guardado para la próxima.</small></div>
               <div class="field fullsm"><label class="lab" for="mCat">Categoría</label>
                 <select id="mCat"></select></div>
               <div class="field fullsm"><label class="lab" for="mMedio">Medio de pago</label>
@@ -239,9 +242,6 @@
               <div class="field full"><button class="btn" type="submit">Guardar compra en cuotas</button></div>
             </div>
           </form>
-          <!-- El gasto de un viaje, cuando hay uno activo: el mismo formulario de
-               la pantalla del viaje (lo dibuja renderViaje). -->
-          <div id="cargaViaje" hidden></div>
           <p class="note" id="paseLink">¿Pasaste plata de un medio a otro, como sacar del cajero o mandarla a Mercado Pago?
             <button type="button" class="linkbtn" data-pasenuevo>Anotalo como pase</button>: no cuenta como ingreso ni gasto.</p>
         </div>
@@ -302,7 +302,7 @@
           <form id="fMeta">
             <div class="form2">
               <div class="field full"><label class="lab" for="gNombre">Nombre</label>
-                <input id="gNombre" type="text" placeholder="Ej: viaje a Bariloche" autocomplete="off" required></div>
+                <input id="gNombre" type="text" placeholder="Ej: vacaciones, la moto" autocomplete="off" required></div>
               <div class="field"><label class="lab" for="gObj">Objetivo</label>
                 <span class="conmon">
                   <input class="money-in" id="gObj" type="text" inputmode="decimal" placeholder="0" autocomplete="off" required>
@@ -321,21 +321,6 @@
                   <span class="pctin mon"><i>U$S</i><input class="money-in" id="gInicialUsd" type="text" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Dólares que ya tenías ahorrados"></span>
                 </span>
                 <small class="pista">Opcional. Entra como punto de partida, no como movimiento del mes.</small></div>
-              <!-- Dónde están esos pesos: se decide acá mismo, al crear la meta, con el
-                   mismo interruptor que después aparece adentro de la meta y en cada
-                   aporte. Sólo se muestra cuando pusiste pesos: los dólares no rinden. -->
-              <div class="field full donde-nueva" id="gDondeWrap" hidden>
-                <span class="lab">Esos pesos</span>
-                <div id="gDonde"></div>
-                <div class="rotras" id="gOtras"></div>
-                <button type="button" class="linkbtn" id="gEfAbrir">+ Parte está en efectivo</button>
-                <div class="refec" id="gEfRow" hidden>
-                  <label class="lab" for="gEfectivo">En efectivo, sin rendir</label>
-                  <span class="pctin plata"><i>$</i><input class="money-in" id="gEfectivo" type="text" inputmode="decimal" placeholder="0" autocomplete="off"></span>
-                  <button type="button" class="iconbtn" id="gEfCerrar" aria-label="Sacar la parte en efectivo" title="Sacar la parte en efectivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-                </div>
-                <small class="pista" id="gDondePista"></small>
-              </div>
               <div class="field full" style="align-self:end"><button class="btn" type="submit">Crear meta</button></div>
             </div>
           </form>
@@ -355,18 +340,6 @@
               <button type="button" data-v="claro" aria-pressed="false">Claro</button>
               <button type="button" data-v="oscuro" aria-pressed="false">Oscuro</button>
             </div>
-          </div>
-        </div>
-
-        <div class="card" id="cardTasa" style="margin-top:14px">
-          <div class="card-head">
-            <div><h2>Cuentas que rinden</h2><p class="sub">Si tu plata está en una cuenta que paga interés, te lo sumo todos los días. Podés cargar más de una.</p></div>
-          </div>
-          <div id="cuentaList"></div>
-          <div class="rowflex" style="margin-top:12px">
-            <button class="btn ghost sm" id="cuentaAdd" type="button">+ Agregar cuenta</button>
-            <div class="spacer"></div>
-            <span class="note" id="cuentaTot"></span>
           </div>
         </div>
 
@@ -405,21 +378,13 @@
 
         <div class="card" id="cardDolar" style="margin-top:14px">
           <div class="card-head">
-            <div><h2>Dólar</h2><p class="sub">Con cuál paso tus dólares a pesos. Elegí el que uses vos: si comprás blue, blue; si tenés USDC, cripto.</p></div>
+            <div><h2>Dólar</h2><p class="sub">A cuánto pasás tus dólares a pesos. Lo escribís vos: se usa para lo que cargues en dólares desde ahora.</p></div>
           </div>
           <div class="form2">
-            <div class="field"><label class="lab" for="dolarTipo">Cuál uso</label>
-              <select id="dolarTipo"></select></div>
-            <div class="field"><label class="lab" for="dolarVenta">Venta</label>
-              <span class="pctin plata"><i>$</i><input class="money-in" id="dolarVenta" type="text" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Cotización de venta"></span></div>
+            <div class="field"><label class="lab" for="dolarVenta">Un dólar son</label>
+              <span class="pctin plata"><i>$</i><input class="money-in" id="dolarVenta" type="text" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Cuántos pesos es un dólar"></span></div>
             <div class="field full"><p class="note" id="dolarNota">—</p></div>
           </div>
-          <div class="lab" style="margin-top:16px">Otras monedas</div>
-          <div id="monedasLista" style="margin-top:4px"></div>
-          <p class="note" style="margin-top:10px">
-            Las bajo de <a href="https://dolarhoy.com" target="_blank" rel="noopener">dolarhoy.com</a> al abrir la app.
-            Sin internet quedan las últimas, y siempre podés escribir la venta a mano.
-          </p>
         </div>
 
         <div class="card" id="cardTopes" style="margin-top:14px">
@@ -481,9 +446,8 @@
           <div class="card-head"><div><h2>Tu cuenta y tus datos</h2>
             <p class="sub">Tus datos se guardan en tu cuenta: entrás con tu email desde el celu o la compu y están ahí.</p></div></div>
           <div id="cuentaAjustes"></div>
-          <div id="dispCuerpo" hidden></div>
-          <div class="dv-copias">
-          <h3 class="dv-h3">Copias en un archivo</h3>
+          <div class="copias">
+          <h3 class="sub-h3">Copias en un archivo</h3>
           <p class="note" id="dondeGuarda" style="margin:0 0 10px">—</p>
           <!-- v224: los tres en un renglón; en el teléfono, como fichas con ícono y nombre corto -->
           <div class="rowflex datos-btns">
@@ -521,10 +485,6 @@
 
       <!-- ============ HERRAMIENTAS ============ -->
       <section class="view" id="v-tools">
-        <div class="card" id="favCard" style="margin-bottom:14px" hidden>
-          <div class="card-head"><div><h2>Tus favoritas</h2><p class="sub">Las que marcaste con la estrella, a un toque</p></div></div>
-          <div class="favs" id="favList"></div>
-        </div>
         <div class="card">
           <div class="card-head"><div><h2>Herramientas</h2><p class="sub">Para organizar lo que entra y sale</p></div></div>
           <div class="tool">
@@ -541,49 +501,12 @@
             </div>
             <button class="btn" data-go="fijos" type="button">Abrir</button>
           </div>
-        </div>
-        <!-- Las calculadoras: cuentas rápidas que no guardan nada salvo que lo pidas. -->
-        <div class="card" id="cardCalcs" style="margin-top:14px">
-          <div class="card-head"><div><h2>Calculadoras</h2><p class="sub">Cuentas rápidas sin salir de la app</p></div></div>
-          <div class="tool">
-            <div>
-              <b>¿Cuotas o contado?</b>
-              <p class="note">Comparás el precio de contado con el plan en cuotas, descontando la inflación mes a mes (con el último dato del INDEC).</p>
-            </div>
-            <button class="btn" data-go="cyc" type="button">Abrir</button>
-          </div>
-          <div class="tool">
-            <div>
-              <b>Conversor de monedas</b>
-              <p class="note">Pesos a dólares y al revés, con el oficial, el MEP, el blue, la tarjeta y los demás. También euros, reales y pesos chilenos y uruguayos.</p>
-            </div>
-            <button class="btn" data-go="conv" type="button">Abrir</button>
-          </div>
-          <div class="tool">
-            <div>
-              <b>Horas extras</b>
-              <p class="note">Cuánto cobrás por las horas de más: al 50% los días comunes y al 100% los fines de semana y feriados.</p>
-            </div>
-            <button class="btn" data-go="hext" type="button">Abrir</button>
-          </div>
-        </div>
-        <!-- Los grupos van aparte: son las herramientas que se usan entre varias
-             personas, cada una desde su celular, y se sincronizan solas. -->
-        <div class="card" id="cardGrupos" style="margin-top:14px">
-          <div class="card-head"><div><h2>Grupos con otras personas</h2><p class="sub">Cada uno carga desde su celular y todo se sincroniza solo, cifrado y sin crear cuentas</p></div></div>
           <div class="tool">
             <div>
               <b>Grupo familiar</b>
-              <p class="note">Usen la app entre varios, cada uno desde su celular: lo que carga cada uno aparece en la app de todos con su nombre, y los gastos a medias se reparten como elijan: en partes iguales, según el sueldo de cada uno o con porcentajes a mano. Lo que uno paga por otro queda pendiente hasta que el otro le paga.</p>
+              <p class="note">Usen la app entre varios, cada uno con su cuenta: lo que carga cada uno aparece en la app de todos con su nombre, y los gastos a medias se reparten como elijan: en partes iguales, según el sueldo de cada uno o con porcentajes a mano.</p>
             </div>
             <button class="btn" data-go="familia" type="button">Abrir</button>
-          </div>
-          <div class="tool">
-            <div>
-              <b>Grupo y gastos de viaje</b>
-              <p class="note">Un grupo para un viaje: mandás un link, cada uno se suma con su nombre y anota lo que paga. Los gastos se sincronizan solos y al final se divide.</p>
-            </div>
-            <button class="btn" data-go="viaje" type="button">Abrir</button>
           </div>
         </div>
       </section>
@@ -625,6 +548,9 @@
                     <button type="button" data-mon="USD" aria-pressed="false">U$S</button>
                   </span>
                 </span></div>
+              <div class="field full cotmano" id="fCotBox" hidden><label class="lab" for="fCot">A cuánto estaba el dólar</label>
+                <span class="pctin plata"><i>$</i><input class="money-in" id="fCot" type="text" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Cuántos pesos era un dólar"></span>
+                <small class="pista">Lo escribís vos. Queda guardado para la próxima.</small></div>
               <div class="field" id="campoFecha"><label class="lab" for="fFecha">Fecha</label>
                 <span class="datewrap">
                   <input id="fFecha" type="date" aria-label="Fecha del primer cobro; después se repite ese día todos los meses" tabindex="-1">
@@ -684,120 +610,8 @@
       </section>
 
 
-      <!-- ============ ¿CUOTAS O CONTADO? ============ -->
-      <section class="view calcv" id="v-cyc">
-        <div class="card">
-          <div class="card-head">
-            <div><h2>¿Cuotas o contado?</h2><p class="sub">Cuál te conviene, con la inflación mes a mes</p></div>
-            <button class="btn ghost sm" data-volver type="button">Volver</button>
-          </div>
-          <div class="form2">
-            <div class="field full"><label class="lab" for="cycQue">Qué comprás <span class="lab-op">(opcional)</span></label>
-              <input id="cycQue" type="text" maxlength="60" placeholder="Ej: heladera, celular" autocomplete="off"></div>
-            <div class="par">
-              <div class="field"><label class="lab" for="cycContado">Precio de contado</label>
-                <span class="pctin plata"><i>$</i><input class="money-in" id="cycContado" type="text" inputmode="decimal" placeholder="0" autocomplete="off"></span></div>
-              <div class="field"><label class="lab" for="cycTotal">Total en cuotas</label>
-                <span class="pctin plata"><i>$</i><input class="money-in" id="cycTotal" type="text" inputmode="decimal" placeholder="0" autocomplete="off"></span></div>
-            </div>
-            <div class="par">
-              <div class="field"><label class="lab" for="cycN">Cuotas</label>
-                <span class="pctin"><input id="cycN" type="text" inputmode="numeric" value="12" autocomplete="off"><i>cuotas</i></span></div>
-              <div class="field"><label class="lab" for="cycInf">Inflación por mes</label>
-                <div class="tnawrap"><span class="pctin"><input id="cycInf" type="text" inputmode="decimal" placeholder="0" autocomplete="off" readonly tabindex="-1" class="bloq"><i>%</i></span><button type="button" class="iconbtn lapiz" id="cycInfLapiz" data-cycinfedit aria-pressed="false" aria-label="Cambiar la inflación" title="Cambiar la inflación"></button></div></div>
-            </div>
-            <p class="note full" id="cycInfNota" style="margin:0"></p>
-          </div>
-          <p class="note" style="margin-top:12px">Si las cuotas son "sin interés", poné el mismo precio que de contado. Si te hacen descuento por pagar de contado, poné el precio con el descuento.</p>
-          <div class="rowflex" style="margin-top:12px"><div class="spacer"></div><button class="btn ghost sm" id="cycLimpiar" type="button">Limpiar</button></div>
-        </div>
-        <div id="cycOut"></div>
-      </section>
-
-      <!-- ============ CONVERSOR DE DÓLAR ============ -->
-      <section class="view calcv" id="v-conv">
-        <div class="card">
-          <div class="card-head">
-            <div><h2>Conversor de monedas</h2><p class="sub" id="convSub">Con las cotizaciones de hoy</p></div>
-            <button class="btn ghost sm" data-volver type="button">Volver</button>
-          </div>
-          <!-- v214: como un traductor: de qué moneda a cuál, y la flecha las da vuelta.
-               Un lado es siempre el peso; el otro se elige. -->
-          <div class="conv-par" id="convPar">
-            <div class="conv-caja conv-pesos"><span class="conv-t">Tenés</span><span class="conv-n">Pesos</span><span class="conv-s">argentinos</span></div>
-            <button type="button" class="conv-swap" id="convSwap" aria-label="Dar vuelta: de dólares a pesos" title="Dar vuelta">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-            <div class="conv-caja conv-otra"><span class="conv-t">Recibís</span><span class="conv-n" id="convOtraN">Dólar</span><span class="conv-s" id="convOtraS"></span>
-              <svg class="conv-car" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 10l5 5 5-5z"/></svg>
-              <select id="convTipo" aria-label="Moneda"></select></div>
-          </div>
-          <p class="conv-pista">Tocá la flecha para darlo vuelta.</p>
-          <div class="form2" style="margin-top:12px">
-            <div class="field full"><label class="lab" for="convMonto" id="convLab">Cuántos pesos</label>
-              <span class="pctin plata"><i id="convSim">$</i><input class="money-in" id="convMonto" type="text" inputmode="decimal" placeholder="0" autocomplete="off"></span></div>
-            <div class="field full" id="convCotBox"><label class="lab" for="convCot" id="convCotLab">Cotización</label>
-              <div class="tnawrap"><span class="pctin plata"><i>$</i><input class="money-in" id="convCot" type="text" inputmode="decimal" placeholder="0" autocomplete="off"></span>
-              <button type="button" class="iconbtn lapiz" id="convCotLapiz" aria-pressed="false" aria-label="Cambiar la cotización" title="Cambiar la cotización" hidden></button></div>
-              <p class="note" id="convCotNota" style="margin:6px 0 0" hidden></p></div>
-          </div>
-          <p class="note" id="convNota" style="margin-top:12px"></p>
-        </div>
-        <!-- el resultado va en su propia tarjeta, como en las otras calculadoras:
-             en pantalla grande queda al lado del formulario -->
-        <div id="convOut"><div class="card"><div class="conv-res" id="convLista"></div></div></div>
-      </section>
-
-      <!-- ============ HORAS EXTRAS ============ -->
-      <section class="view calcv" id="v-hext">
-        <div class="card">
-          <div class="card-head">
-            <div><h2>Horas extras</h2><p class="sub">Anotá cada día las que hiciste y a fin de mes ya tenés la cuenta hecha</p></div>
-            <button class="btn ghost sm" data-volver type="button">Volver</button>
-          </div>
-          <div class="form2">
-            <div class="par">
-              <div class="field"><label class="lab" for="hxSueldo">Sueldo del mes</label>
-                <span class="pctin plata"><i>$</i><input class="money-in" id="hxSueldo" type="text" inputmode="decimal" placeholder="0" autocomplete="off"></span></div>
-              <div class="field"><label class="lab" for="hxHoras">Horas normales al mes</label>
-                <span class="pctin"><input id="hxHoras" type="text" inputmode="decimal" value="200" autocomplete="off"><i>hs</i></span></div>
-            </div>
-          </div>
-          <p class="note" id="hxNota" style="margin-top:10px"></p>
-          <div class="hr"></div>
-          <div class="lab" style="margin-bottom:10px">Anotar un día</div>
-          <form class="form2 pairfecha" id="hxForm">
-            <div class="field fecha"><label class="lab">Día</label>
-              <span class="datewrap"><input name="fecha" id="hxFecha" type="date" aria-label="Día de las horas extras" tabindex="-1">
-              <button type="button" class="datebtn" aria-label="Elegir el día"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="d-lg">—</span><span class="d-sm">—</span></button></span></div>
-            <div class="field"><label class="lab" for="hxCant">Horas</label>
-              <span class="pctin"><input id="hxCant" type="text" inputmode="decimal" placeholder="Ej: 2 o 1,5" autocomplete="off"><i>hs</i></span></div>
-            <div class="field full"><span class="lab">Recargo</span>
-              <div class="hx-pct">
-                <div class="seg" id="segHxPct" role="group" aria-label="Recargo">
-                  <button type="button" data-v="50" aria-pressed="true">Al 50%</button>
-                  <button type="button" data-v="100" aria-pressed="false">Al 100%</button>
-                  <button type="button" data-v="otro" aria-pressed="false">Otro</button>
-                </div>
-                <span class="pctin" id="hxOtroBox" hidden><i>%</i><input id="hxOtro" type="text" inputmode="decimal" placeholder="Ej: 75" autocomplete="off" aria-label="Recargo en porcentaje"></span>
-              </div>
-              <small class="pista" id="hxPista"></small></div>
-            <div class="field full rowflex" style="gap:8px;flex-wrap:nowrap;flex-direction:row">
-              <button class="btn" type="submit" id="hxOk" style="flex:1;min-width:0">Sumar horas</button>
-              <button class="btn ghost" type="button" id="hxCancelar" style="flex:none" hidden>Cancelar</button></div>
-          </form>
-          <div class="hr"></div>
-          <div class="lab" id="hxListaTit" style="margin-bottom:6px">Este mes</div>
-          <div class="rows" id="hxLista"></div>
-          <p class="note" style="margin-top:12px">Al 50%: días comunes. Al 100%: sábados después de las 13, domingos y feriados. Si tu convenio paga otro recargo, elegí "Otro". Las horas normales son las de tu jornada: con 48 por semana son unas 200 al mes; con 40, unas 173.</p>
-        </div>
-        <div id="hxOut"></div>
-      </section>
-
       <!-- ============ GRUPO FAMILIAR (lo dibuja renderFamilia) ============ -->
       <section class="view" id="v-familia"><div id="familiaCuerpo"></div></section>
-
-      <!-- ============ GASTOS DE VIAJE ============ -->
-      <section class="view" id="v-viaje"><div id="viajeCuerpo"></div></section>
 
       <!-- ============ DIVIDIR GASTOS ============ -->
       <section class="view" id="v-dividir">
@@ -921,15 +735,6 @@
   <span class="vp-txt"><b>Cargá con la voz</b>Mantené apretado el + y decí, por ejemplo, «gasté 15 mil en el súper».</span>
   <button type="button" class="vp-x" data-vozpistaok aria-label="Entendido">Entendido</button></div>
 <!-- v223: el paseo para los que recién llegan (pzAbrir) -->
-<div id="qrScan" hidden role="dialog" aria-modal="true" aria-labelledby="qrScanTit">
-  <div class="qs-caja">
-    <p class="qs-tit" id="qrScanTit">Escaneá el QR del otro dispositivo</p>
-    <div class="qs-visor"><video id="qrVideo" playsinline muted autoplay></video><i class="qs-marco" aria-hidden="true"></i></div>
-    <p class="qs-nota" id="qrScanNota">Apuntá la cámara al QR que muestra la otra pantalla.</p>
-    <div class="qs-btns"><button class="btn ghost" type="button" data-dv="qrcodigo">Escribir el código</button>
-      <button class="btn ghost" type="button" data-dv="qrcerrar">Cancelar</button></div>
-  </div>
-</div>
 <div id="paseo" hidden role="dialog" aria-modal="true" aria-labelledby="pzTit" aria-describedby="pzDesc">
   <div class="pz-foco"></div>
   <div class="pz-globo">
@@ -959,13 +764,11 @@
 <input type="file" id="fileIn" accept="application/json,.json" style="position:fixed;left:-9999px;width:1px;height:1px">
 
 <!-- Código: una librería y después la app, en orden (cada archivo usa lo de los anteriores) -->
-<script src="js/lib/secp256k1.js"></script>
 <script src="js/lib/supabase.js"></script>
 <script src="js/configuracion.js"></script>
 <script src="js/utilidades.js"></script>
 <script src="js/estado.js"></script>
 <script src="js/persistencia.js"></script>
-<script src="js/tasas-y-dolar.js"></script>
 <script src="js/calculos.js"></script>
 <script src="js/cuentas-y-saldos.js"></script>
 <script src="js/render.js"></script>
@@ -979,13 +782,8 @@
 <script src="js/interaccion.js"></script>
 <script src="js/calendario-y-avisos.js"></script>
 <script src="js/eventos.js"></script>
-<script src="js/calculadoras.js"></script>
 <script src="js/dividir-gastos.js"></script>
-<script src="js/viajes.js"></script>
-<script src="js/sincronizacion.js"></script>
-<script src="js/dispositivos.js"></script>
 <script src="js/grupo-familiar.js"></script>
-<script src="js/viajes-pantalla.js"></script>
 <script src="js/voz.js"></script>
 <script src="js/paseo.js"></script>
 <script src="js/controles.js"></script>

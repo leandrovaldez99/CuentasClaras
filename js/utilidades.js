@@ -70,7 +70,6 @@ function usd(n){
   var s = (Math.abs(n % 1) < 0.005) ? nfInt.format(Math.round(n)) : nfFull.format(n);
   return (n<0? '-U$S ' : 'U$S ') + s.replace('-','');
 }
-function enMoneda(n, moneda){ return moneda === 'USD' ? usd(n) : money(n); }
 function cotDolar(){ return Math.max(0, Number(S.dolar && S.dolar.venta) || 0); }
 function aPesos(monto, moneda, cot){
   monto = Number(monto)||0;
@@ -78,8 +77,8 @@ function aPesos(monto, moneda, cot){
   var c = Number(cot) > 0 ? Number(cot) : cotDolar();
   return c > 0 ? monto * c : 0;
 }
-/* Un movimiento en dólares guarda `mon:'USD'` y `cot`, el blue del día en que se
-   cargó. Se convierte SIEMPRE con esa cotización, no con la de hoy: así un mes
+/* Un movimiento en dólares guarda `mon:'USD'` y `cot`, el dólar que tenías cargado
+   ese día. Se convierte SIEMPRE con esa cotización, no con la de hoy: así un mes
    ya cerrado no se reescribe solo cada vez que se mueve el dólar. */
 function esUSD(x){ return !!(x && x.mon === 'USD'); }
 function montoPesos(x){
@@ -167,3 +166,8 @@ function fechaLabel(f){
   var d = parseInt(f.slice(8,10),10), m = MESES[parseInt(f.slice(5,7),10)-1]||'';
   return d+' '+m.slice(0,3);
 }
+/* Un id corto (para las personas del grupo). */
+function idCorto(){ return (uid() + uid()).replace(/[^a-z0-9]/gi,'').slice(0,12); }
+/* "HH:MM" válida, o ''. */
+function horaOk(h){ return (typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h)) ? h : ''; }
+function ahoraHM(){ var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }

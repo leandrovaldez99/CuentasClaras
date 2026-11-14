@@ -23,8 +23,6 @@ var PZ_SVG = {
   fam:'<svg viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5.6" r="2"/><path d="M1 13.6c0-2.2 1.7-3.6 3.6-3.6"/><circle cx="17" cy="5.6" r="2"/><path d="M21 13.6c0-2.2-1.7-3.6-3.6-3.6"/><circle cx="11" cy="4.8" r="2.5"/><path d="M6.4 14.2c0-2.8 2-4.5 4.6-4.5s4.6 1.7 4.6 4.5"/></svg>',
   cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>',
   div:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="18" r="1.6"/><path d="M5 12h14"/></svg>',
-  conv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>',
-  avion:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5L3 11l1.5-1.5 8 .5 4-4.5a2 2 0 013 3l-4.5 4 .5 8L14 22l-2.5-7.5-3 3V20l-1.5 1-1-3.5L2.5 16l1-1.5h2.5z"/></svg>',
   luna:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></svg>',
   mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21"/></svg>'
 };
@@ -52,7 +50,7 @@ function pzDemo(k){
     + '<div class="dm-prog"><i></i></div></div></div>';
   if(k === 'tools') return '<div class="dm dm-her">'
     + '<span class="dm-card">' + V.cal + 'Fijos</span><span class="dm-card">' + V.div + 'Dividir</span>'
-    + '<span class="dm-card">' + V.conv + 'Monedas</span><span class="dm-card">' + V.avion + 'Viajes</span></div>';
+    + '<span class="dm-card dm-ancho">' + V.fam + 'Grupo familiar</span></div>';
   if(k === 'ajustes') return '<div class="dm dm-aju">'
     + '<span class="dm-card">' + V.luna + 'Oscuro<i class="dm-sw"></i></span>'
     + '<span class="dm-card">Categorías<span class="dm-cats"><i style="background:#E07A5F"></i><i style="background:#3E82D0"></i><i style="background:#E9B949"></i></span></span>'
@@ -74,9 +72,9 @@ var PASOS = [
   { t:'Ahorrá con metas', d:'Ponele nombre y un objetivo, y andá sumando.', sel:pzNav('ahorro'), vista:'ahorro', demo:'ahorro',
     l:['En pesos o en dólares', 'Cada aporte suma y ves cuánto te falta', 'Si sacás, también queda anotado'] },
   { t:'Herramientas', d:'Cosas que te ahorran cuentas.', sel:pzNav('tools'), vista:'tools', demo:'tools',
-    l:['Fijos y suscripciones: aparecen solos cada mes', 'Dividir gastos, viajes con amigos y grupo familiar', '¿Cuotas o contado?, conversor de monedas y horas extras'] },
+    l:['Fijos y suscripciones: aparecen solos cada mes', 'Dividir gastos de una salida', 'Grupo familiar: la app entre varios, cada uno con su cuenta'] },
   { t:'A tu medida', d:'Dejala como más te sirva.', sel:pzNav('ajustes'), vista:'ajustes', demo:'ajustes',
-    l:['Tus categorías, tarjetas y medios de pago', 'Modo claro u oscuro', 'Una copia de tus datos, y tus otros dispositivos'] }
+    l:['Tus categorías, tarjetas y medios de pago', 'Modo claro u oscuro', 'Tu cuenta, y una copia de tus datos en un archivo'] }
 ];
 var pzI = 0, pzAbierto = false, pzDesde = 'resumen', pzFocoAntes = null;
 function pzVisto(){ try{ return !!localStorage.getItem(PASEO_KEY); }catch(e){ return false; } }
@@ -242,7 +240,7 @@ function wipeTxt(b, armado){
 
 /* export / import */
 function exportar(){
-  var data = JSON.stringify(paraGuardar(sinSy()), null, 2);
+  var data = JSON.stringify(paraGuardar(S), null, 2);
   var name = 'cuentas-claras-'+today()+'.json';
   if(AND()){
     var msg = '';
@@ -272,16 +270,13 @@ $('#fileIn').addEventListener('change', function(e){
   rd.onload = function(){
     try{
       var o = JSON.parse(rd.result);
-      var syAntes = S.sy, gente = S.personas, marca = S.dbMarca;
+      var gente = S.personas, marca = S.dbMarca;
       S = normalize(o); S.updatedAt = Date.now();
       if(dbActiva()){
         // con cuenta: lo importado reemplaza los datos, pero la gente del grupo es la que está en la base
         S.dbMarca = marca;
         if((gente || []).length) S.personas = gente;
       }
-      // el vínculo de este dispositivo se queda; lo importado entra como nuevo, sin borrar nada en los otros
-      delete S.sy;
-      if(syAntes && syAntes.link) S.sy = { link:syAntes.link, h:{}, pub:{}, vistos:syAntes.vistos || {}, base:Date.now(), solo:syAntes.solo };
       save(); render(); toast('Datos importados');
     }catch(x){ toast('Ese archivo no tiene el formato correcto'); }
   };

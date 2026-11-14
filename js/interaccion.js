@@ -22,7 +22,7 @@ function fillSelects(){
   $('#fCat').innerHTML = S.catGasto.map(function(c){ return '<option'+(c==='Servicios'?' selected':'')+'>'+esc(c)+'</option>'; }).join('');
   $('#fMedio').innerHTML = opcionesMedio('Débito');
 }
-var NAV_DE = { dividir:'tools', fijos:'tools', viaje:'tools', familia:'tools', cyc:'tools', conv:'tools', hext:'tools' };
+var NAV_DE = { dividir:'tools', fijos:'tools', familia:'tools' };
 var cargaTab = 'gasto';   // gasto | ingreso | cuotas
 var editando = null;      // id del movimiento que estoy editando
 var editandoPlan = null;  // id de la compra en cuotas que estoy editando
@@ -49,11 +49,9 @@ function go(v){
   $$('.view').forEach(function(s){ s.classList.toggle('on', s.id === 'v-'+v); });
   $$('.rail [data-go], .tabs [data-go]').forEach(function(b){ b.setAttribute('aria-current', b.getAttribute('data-go')===nav ? 'true':'false'); });
   window.scrollTo({top:0, behavior:'instant' in window ? 'auto':'auto'});
-  if(v === 'cargar') pintarCarga();   // por si apareció o se terminó un viaje
+  if(v === 'cargar') pintarCarga();
   if(v === 'familia') renderFamilia();
-  abrirCalc(v);
   pintarVerQuien();
-  vjSincContenedor();
   ajustarNumsPronto();     // la pantalla que aparece estaba oculta: sus números no se pudieron medir
 }
 /* La pantalla de carga: un solo lugar para gastos, entradas y compras en cuotas.
@@ -68,44 +66,26 @@ function pintarFab(){
 }
 function pintarCarga(){
   var seg = $('#segCarga'); if(!seg) return;
-  /* Con un viaje activo, el "+" suma una cuarta opción con el nombre del viaje:
-     el gasto se carga ahí y se divide con el grupo. Va en un renglón propio
-     debajo de las otras tres, a lo ancho, así el nombre entra entero. */
-  var vc = vjViajeCarga(), bv = $('#segCarga [data-v="viaje"]');
-  if(vc){
-    if(!bv){
-      bv = document.createElement('button'); bv.type = 'button'; bv.setAttribute('data-v', 'viaje');
-      seg.appendChild(bv);
-    }
-    var etq = VJ_ICONO + '<span>' + esc(vc.nombre) + '</span>';
-    if(bv.innerHTML !== etq) bv.innerHTML = etq;
-    bv.setAttribute('aria-label', 'Gasto del viaje ' + vc.nombre);
-  } else if(bv){ bv.parentNode.removeChild(bv); }
-  seg.classList.toggle('con-viaje', !!vc);
-  if(cargaTab === 'viaje' && !vc) cargaTab = 'gasto';
   pintarFab();
   var editandoAlgo = !!editando || !!editandoPlan;
   $$('#segCarga button').forEach(function(b){
     b.setAttribute('aria-pressed', b.getAttribute('data-v') === cargaTab ? 'true':'false');
     b.disabled = editandoAlgo && b.getAttribute('data-v') !== cargaTab;
   });
-  var esCuota = cargaTab === 'cuotas', esViaje = cargaTab === 'viaje';
+  var esCuota = cargaTab === 'cuotas';
   if(esCuota) proponerDiaDeMedio();
-  $('#fMov').hidden = esCuota || esViaje;
+  $('#fMov').hidden = esCuota;
   $('#fCuota').hidden = !esCuota;
-  var cv = $('#cargaViaje'); if(cv) cv.hidden = !esViaje;
-  var pl = $('#paseLink'); if(pl) pl.hidden = esCuota || esViaje || editandoAlgo;
+  var pl = $('#paseLink'); if(pl) pl.hidden = esCuota || editandoAlgo;
   var mqb = $('#mQuienBox .qb-med'); if(mqb) mqb.hidden = (cargaTab !== 'gasto');
   $('#cancelarEdit').hidden = !editandoAlgo;
   $('#cargaTit').textContent = editando ? 'Editar movimiento'
     : (editandoPlan ? 'Editar compra en cuotas'
-    : (esCuota ? 'Nueva compra en cuotas' : (esViaje ? 'Gasto del viaje' : 'Cargar')));
+    : (esCuota ? 'Nueva compra en cuotas' : 'Cargar'));
   $('#cargaSub').textContent = editandoAlgo
     ? 'Cambiá lo que quieras y guardá'
     : (esCuota ? 'Cargá el total y las cuotas: el resto lo calculo yo'
-    : (esViaje ? 'Se divide entre los de ' + vc.nombre + ' y les llega solo. Tu parte la sumás a tus gastos desde el viaje.'
-               : 'Un gasto, una entrada de plata o una compra en cuotas'));
-  vjSincContenedor();
+               : 'Un gasto, una entrada de plata o una compra en cuotas');
   $('#fMov').querySelector('button[type=submit]').textContent = editando ? 'Guardar cambios' : 'Agregar movimiento';
   $('#fCuota').querySelector('button[type=submit]').textContent = editandoPlan ? 'Guardar cambios' : 'Guardar compra en cuotas';
   pintarSueldoAyudas();
@@ -122,6 +102,7 @@ function entrarEdit(id){
   fillSelects();
   monMov = esUSD(t) ? 'USD' : 'ARS';
   pintarMon();
+  if(esUSD(t) && Number(t.cot) > 0) $('#mCot').value = enCampo(Number(t.cot));
   $('#mMonto').value = enCampo(Number(t.monto)||0);
   $('#mFecha').value = t.fecha || defaultFecha();
   $('#mCat').value = t.cat || '';
@@ -264,7 +245,7 @@ function pintarMedios(){
     return '<small class="soloch">entró ' + esc(money(f.entro)) + ' · salió ' + esc(money(f.salio)) + '</small>';
   }
   var cuerpo = filas.map(function(f){
-    return '<tr><td>' + esc(f.medio) + (f.rinde ? ' <span class="pill ok">rinde</span>' : '') + detalle(f) + '</td>'
+    return '<tr><td>' + esc(f.medio) + detalle(f) + '</td>'
       + '<td class="det' + (f.entro > 0 ? ' verde' : '') + '">' + esc(numTabla(f.entro)) + '</td>'
       + '<td class="det' + (f.salio > 0 ? ' rojo' : '') + '">' + esc(numTabla(f.salio)) + '</td>'
       + '<td class="' + (f.saldo < 0 ? 'rojo' : (f.saldo > 0 ? 'verde' : '')) + '"><b>'
@@ -280,11 +261,7 @@ function pintarMedios(){
     + '<td class="' + (tot.saldo < 0 ? 'rojo' : 'verde') + '"><b>' + esc(numTabla(tot.saldo)) + '</b></td></tr></tfoot>'
     + '</table></div>';
 
-  var intereses = filas.reduce(function(a,f){ return a + f.interes; }, 0);
-  var ahorros   = filas.reduce(function(a,f){ return a + f.ahorro; }, 0);
-  var notas = ['Todo en pesos, al dólar del día de cada movimiento.'];
-  if(intereses > 0) notas.push('En "entró" van ' + money(intereses) + ' de intereses.');
-  if(ahorros > 0) notas.push('En "salió" van ' + money(ahorros) + ' que apartaste en metas: la plata es tuya, pero ya no está en la cuenta.');
+  var notas = ['Todo en pesos, al dólar de cada movimiento.'];
   var pasado = filas.reduce(function(a,f){ return a + f.pasoIn; }, 0);
   if(pasado > 0) notas.push('También van ' + money(pasado) + ' que pasaste de un medio a otro: salen de uno y entran en el otro, así que el total no cambia.');
   notas.push('Cuento desde tu primer movimiento: lo que tenías antes de usar la app no lo sé, así que un medio puede darte en rojo aunque tengas plata.');
@@ -293,12 +270,10 @@ function pintarMedios(){
 /* ---- pasar plata de un medio a otro ----
    Un pase no es un ingreso ni un gasto: sale de un medio y entra en el otro.
    Se guarda aparte (`S.pases`), así que los totales del mes, el balance y los
-   gráficos no lo ven; sí lo ven los saldos por medio y el interés de las
-   cuentas que rinden (la plata que llega a Mercado Pago empieza a rendir). */
+   gráficos no lo ven; sí lo ven los saldos por medio. */
 var paseEdit = null;
 function paseDefectos(){
   var l = medios(), de = l.indexOf('Efectivo') > -1 ? 'Efectivo' : l[0], a = '';
-  cuentasQueRinden().forEach(function(c){ if(!a && c.medio !== de && l.indexOf(c.medio) > -1) a = c.medio; });
   if(!a) l.forEach(function(m){ if(!a && m !== de) a = m; });
   return { de:de, a:a || de };
 }

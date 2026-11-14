@@ -40,7 +40,7 @@ function comboOpciones(c){
     if(!o.value) return;
     var g = (o.parentNode && o.parentNode.tagName === 'OPTGROUP') ? o.parentNode.label : '';
     var p = o.textContent.split(' · ');
-    out.push({ v:o.value, n:p[0], tna:p[1]||'', g:g, busca:o.getAttribute('data-busca')||'' });
+    out.push({ v:o.value, n:p[0], det:p[1]||'', g:g, busca:o.getAttribute('data-busca')||'' });
   });
   return out;
 }
@@ -78,7 +78,7 @@ function comboPintar(c, q){
     if(o.g !== g){ g = o.g; if(g) html += '<div class="combo-g">' + esc(g) + '</div>'; }
     html += '<button type="button" class="combo-o" role="option" data-v="' + esc(o.v) + '"'
       + ' aria-selected="' + (o.v === actual ? 'true' : 'false') + '">'
-      + '<b>' + resaltar(o.n, nq) + '</b><i>' + esc(o.tna) + '</i></button>';
+      + '<b>' + resaltar(o.n, nq) + '</b><i>' + esc(o.det) + '</i></button>';
   });
   c.pop.innerHTML = html;
 }

@@ -14,14 +14,12 @@ function catDeItem(x){
   if(x.tx) return (x.tx.tipo === 'ingreso' ? 'ingreso' : 'gasto') + '|' + (x.tx.cat || 'Otros');
   if(x.cuota) return 'gasto|' + (x.cuota.plan.cat || 'Otros');
   if(x.fijo) return ((x.fijo.fijo.tipo === 'ingreso') ? 'ingreso' : 'gasto') + '|' + (x.fijo.fijo.cat || 'Otros');
-  if(x.itr !== undefined) return 'ingreso|' + (S.catIng.indexOf('Intereses') > -1 ? 'Intereses' : 'Otros');
   return '';
 }
 function montoDeItem(x){
   if(x.tx) return montoPesos(x.tx);
   if(x.cuota) return x.cuota.pend ? 0 : x.cuota.monto;
   if(x.fijo) return x.fijo.pend ? 0 : x.fijo.monto;
-  if(x.itr !== undefined) return x.itr;
   return 0;
 }
 /* ---- v289: filtro por medio de pago ----
@@ -32,7 +30,6 @@ function itemEnMedio(x, m){
   if(x.tx) return (x.tx.medio || '') === m;
   if(x.cuota) return (x.cuota.plan.medio || '') === m;
   if(x.fijo) return (x.fijo.fijo.medio || '') === m;
-  if(x.itr !== undefined) return (x.cuenta || (cuentasQueRinden()[0] || {}).medio || '') === m;
   return false;
 }
 function pintarMedFiltro(items){
@@ -40,8 +37,7 @@ function pintarMedFiltro(items){
   var cuenta = {}, orden = medios().slice();
   items.forEach(function(x){
     var ms = x.pase ? [x.pase.de, x.pase.a]
-           : [x.tx ? x.tx.medio : x.cuota ? x.cuota.plan.medio : x.fijo ? x.fijo.fijo.medio
-              : x.itr !== undefined ? (x.cuenta || (cuentasQueRinden()[0] || {}).medio) : ''];
+           : [x.tx ? x.tx.medio : x.cuota ? x.cuota.plan.medio : x.fijo ? x.fijo.fijo.medio : ''];
     ms.forEach(function(m){ if(!m) return; cuenta[m] = (cuenta[m] || 0) + 1; if(orden.indexOf(m) < 0) orden.push(m); });
   });
   if(medFiltro && cuenta[medFiltro] === undefined) cuenta[medFiltro] = 0;
@@ -61,7 +57,7 @@ function pintarMedRes(items){
   items.forEach(function(x){
     if(x.pase){ if(x.pase.de === m) salio += x.pase.monto; if(x.pase.a === m) entro += x.pase.monto; return; }
     var v = montoDeItem(x);
-    if(x.itr !== undefined || (x.tx && x.tx.tipo === 'ingreso') || (x.fijo && x.fijo.fijo.tipo === 'ingreso')) entro += v; else salio += v;
+    if((x.tx && x.tx.tipo === 'ingreso') || (x.fijo && x.fijo.fijo.tipo === 'ingreso')) entro += v; else salio += v;
   });
   var fila = null; saldosPorMedio(mes).forEach(function(f){ if(f.medio === m) fila = f; });
   var saldo = fila ? fila.saldo : 0, ahora = ymNow();
@@ -128,15 +124,11 @@ function renderMov(){
     if(x.pend){ nPend++; return; }
     items.push({ f:x.fecha, r:-1, fijo:x }); nFijV++;
   });
-  // un renglón por cada día que rindió
   // los pases entre medios, sólo en "Todo": no son ni gastos ni ingresos
   var nPases = 0;
   if(filtroMov === 'todo') (S.pases||[]).forEach(function(p, i){
     if(ymOf(p.fecha) !== mes || !esDeVista(p)) return;
     items.push({ f:p.fecha, r:recencia(p, i), pase:p }); nPases++;
-  });
-  if(filtroMov !== 'gasto') interesesDias(mes).forEach(function(d){
-    items.push({ f:d.fecha, r:-3, itr:d.monto, cuenta:d.cuenta });
   });
   pintarCatFiltro(items);
   pintarMedFiltro(items);
@@ -171,7 +163,6 @@ function renderMov(){
         if(x.tx) return rowTx(x.tx, true);
         if(x.pase) return rowPase(x.pase, true);
         if(x.arr !== undefined) return rowArrastre(mes, x.arr, S.arrastreModo === 'preguntar');
-        if(x.itr !== undefined) return rowInteres(x.f, x.itr, x.cuenta);
         if(x.fijo) return rowFijo(x.fijo.fijo, x.fijo.monto, x.fijo.fecha, x.fijo.propio, x.fijo.pend, false, x.fijo);
         if(x.oferta) return rowOferta(mes);
         return rowCuota(x.cuota);

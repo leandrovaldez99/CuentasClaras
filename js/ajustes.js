@@ -127,66 +127,15 @@ function renderArr(){
       ? 'Cada mes arranca de cero: el balance dice cómo te fue en ese mes.'
       : 'Te pregunto una vez por mes y decidís vos.');
 }
-/* Cambiar de dólar. Si todavía no tengo el que elegiste, la cotización queda en
-   cero: la app avisa y la podés escribir a mano. Lo que NO hago es dejar puesta
-   la del tipo anterior, que sería valuar tus dólares a un precio que no es el
-   tuyo. */
-function elegirDolar(tp){
-  if(!esTipoDolar(tp)) return;
-  S.dolar = S.dolar || {}; S.dolar.tipos = S.dolar.tipos || {};
-  if(S.dolar.tipo === tp) return;
-  S.dolar.tipo = tp;
-  if(!aplicarTipoDolar(true)){ S.dolar.venta = 0; S.dolar.fecha = ''; S.dolar.auto = false; }
-  save(); render();
-  toast(cotDolar() > 0
-    ? ('Ahora uso el dólar ' + nombreDolar(tp).toLowerCase() + ': ' + money(cotDolar()))
-    : ('No tengo el dólar ' + nombreDolar(tp).toLowerCase() + '. Escribí la venta acá al lado.'));
-}
-function ventaDolar(id){
-  var t = S.dolar && S.dolar.tipos ? S.dolar.tipos[id] : null;
-  return (t && t.venta > 0) ? t.venta : 0;
-}
-function renderMonedas(){
-  var box = $('#monedasLista'); if(!box) return;
-  var o = (S.dolar && S.dolar.otras) || {}, f = '';
-  var h = MONEDAS.map(function(m){
-    var t = o[m.id];
-    if(t && t.fecha && t.fecha > f) f = t.fecha;
-    return kv(m.n, t ? moneyCot(t.venta) : 'sin cotización', null,
-      t ? 'Venta' + (t.compra > 0 && t.compra !== t.venta ? '. Compra: ' + moneyCot(t.compra) : '') + (t.mano ? '. La escribiste vos' : '') : 'Se baja sola cuando hay internet');
-  }).join('');
-  h += '<p class="note" style="margin-top:8px">Cotización oficial, en pesos por cada una' + (f ? ', del ' + esc(fechaLarga(f)) : '') + '. Para pasar plata de una a otra, usá el conversor de Herramientas.</p>';
-  if(box.innerHTML !== h) box.innerHTML = h;
-}
+/* El dólar: lo escribe el usuario. */
 function renderDolar(){
-  renderMonedas();
   var i = $('#dolarVenta'); if(!i) return;
-  var c = cotDolar(), elegido = tipoDolar();
-
-  var sel = $('#dolarTipo');
-  if(sel && document.activeElement !== sel){
-    sel.innerHTML = DOLARES.map(function(d){
-      var v = ventaDolar(d.id);
-      return '<option value="'+d.id+'"'+(d.id === elegido ? ' selected' : '')+'>'
-        + esc(d.n) + (v > 0 ? ' · ' + esc(money(v)) : '') + '</option>';
-    }).join('');
-    sel.value = elegido;
-  }
+  var c = cotDolar();
   if(document.activeElement !== i) i.value = c > 0 ? enCampo(c) : '';
-
-  var n = $('#dolarNota');
-  if(!n) return;
-  if(c <= 0){
-    n.textContent = 'No tengo la cotización del dólar ' + nombreDolar(elegido).toLowerCase()
-      + ', así que no puedo pasar tus dólares a pesos. Escribila acá al lado.';
-    return;
-  }
-  var f = S.dolar && S.dolar.fecha ? S.dolar.fecha : '';
-  var det = detDolar(elegido);
-  n.textContent = 'Uso el dólar ' + nombreDolar(elegido).toLowerCase()
-    + (det ? ': ' + det : '') + '. '
-    + (S.dolar && S.dolar.auto ? 'La bajé sola' : 'La cargaste vos')
-    + (f ? ' el ' + fechaLarga(f) : '') + '.';
+  var n = $('#dolarNota'); if(!n) return;
+  n.textContent = c > 0
+    ? 'Lo cargaste' + (S.dolar.fecha ? ' el ' + fechaLarga(S.dolar.fecha) : '') + '. Lo que ya cargaste en dólares queda con el valor que tenía ese día.'
+    : 'Todavía no lo cargaste: hasta que lo escribas no se puede cargar nada en dólares.';
 }
 /* ---- medios de pago ---- */
 function medios(){ return (S.medios && S.medios.length) ? S.medios : MEDIOS; }
@@ -216,8 +165,8 @@ function desmarcarMedioQuitado(nombre){
   if(i > -1) S.mediosQuitados.splice(i, 1);
 }
 /* v292: lo que antes se olvidaba al renombrar o borrar un medio: el día de las
-   cuotas de esa tarjeta, lo que se pagaron en el grupo (de qué medio salió y a
-   cuál entró) y la parte de un viaje que cargaste como gasto. */
+   cuotas de esa tarjeta y lo que se pagaron en el grupo (de qué medio salió y a
+   cuál entró). */
 function medioCambiarEnResto(viejo, nuevo){
   if(S.diaMedio && S.diaMedio[viejo]){ if(nuevo && !S.diaMedio[nuevo]) S.diaMedio[nuevo] = S.diaMedio[viejo]; delete S.diaMedio[viejo]; }
   [S.tx, S.planes, S.fijos].forEach(function(l){
@@ -226,7 +175,6 @@ function medioCambiarEnResto(viejo, nuevo){
       Object.keys(x.sal).forEach(function(k){ var v = x.sal[k]; if(!v) return; if(v.de === viejo) v.de = nuevo; if(v.a === viejo) v.a = nuevo; });
     });
   });
-  (S.viajes || []).forEach(function(v){ if(v && v.cargado && v.cargado.medio === viejo) v.cargado.medio = nuevo; });
 }
 function renombrarMedio(i, nuevo){
   var viejo = S.medios[i];
@@ -236,8 +184,6 @@ function renombrarMedio(i, nuevo){
   S.planes.forEach(function(p){ if((p.medio||'') === viejo) p.medio = nuevo; });
   (S.fijos||[]).forEach(function(f){ if((f.medio||'') === viejo) f.medio = nuevo; });
   (S.pases||[]).forEach(function(p){ if(p.de === viejo) p.de = nuevo; if(p.a === viejo) p.a = nuevo; });
-  // la cuenta que rinde con ese medio se llama igual: que lo siga
-  cuentas().forEach(function(c){ if(c.medio === viejo) c.medio = nuevo; });
   medioCambiarEnResto(viejo, nuevo);
   // v292: el id es el mismo: sólo cambia el nombre
   var reg = medReg(); if(reg[viejo]){ reg[nuevo] = reg[viejo]; delete reg[viejo]; }
@@ -247,8 +193,6 @@ function renombrarMedio(i, nuevo){
 function borrarMedio(i){
   if(S.medios.length <= 1) return 'Tiene que quedar al menos un medio de pago';
   var nombre = S.medios[i];
-  // es el medio de una cuenta que rinde: borrarlo la dejaría sin saldo
-  if(cuentaDelMedio(nombre)) return 'No puedo: "'+nombre+'" es la cuenta que rinde. Borrala desde "Cuentas que rinden".';
   S.medios.splice(i, 1);
   var destino = S.medios.indexOf('Efectivo') > -1 ? 'Efectivo' : S.medios[0];
   var movidos = 0;

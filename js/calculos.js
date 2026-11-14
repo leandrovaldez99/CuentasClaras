@@ -1,5 +1,5 @@
 /* Cuentas Claras · js/calculos.js
-   Las cuentas: gastos fijos, días hábiles y feriados, inflación, cuotas, metas de ahorro y resumen del mes.
+   Las cuentas: gastos fijos, días hábiles y feriados, cuotas y metas de ahorro.
 
    Todos los archivos de js/ comparten el mismo espacio de nombres: se cargan en
    orden desde index.html y lo que define uno lo pueden usar los que siguen. */
@@ -132,43 +132,6 @@ function traerFeriados(){
     }catch(e){}
   });
 }
-/* ---- la inflación ----
-   El IPC mensual del INDEC, para la calculadora de cuotas o contado. Fuente:
-   api.argentinadatos.com (la misma de los feriados y los plazos fijos). Se pide
-   una vez por día y queda guardado en este dispositivo; si no hay internet, se
-   usa el último que se bajó o, la primera vez, el que viene con la app. */
-var IPC_URL = 'https://api.argentinadatos.com/v1/finanzas/indices/inflacion';
-var IPC_KEY = 'plata-clara-ipc';
-var IPC_FABRICA = { ym:'2026-09', v:1.9, dia:'' };
-var ipcDato = (function(){
-  try{ var o = JSON.parse(localStorage.getItem(IPC_KEY) || 'null');
-       if(o && /^\d{4}-\d{2}$/.test(o.ym) && typeof o.v === 'number' && o.ym >= IPC_FABRICA.ym) return o; }catch(e){}
-  return { ym:IPC_FABRICA.ym, v:IPC_FABRICA.v, dia:'' };
-})();
-window.__ipcListo = function(txt){
-  var l; try{ l = typeof txt === 'string' ? JSON.parse(txt) : txt; }catch(e){ return; }
-  if(!Array.isArray(l)) return;
-  var ult = null;
-  l.forEach(function(x){
-    var f = String(x && x.fecha || ''), v = Number(x && x.valor);
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(f) || !isFinite(v) || v < -10 || v > 60) return;
-    if(!ult || f > ult.f) ult = { f:f, v:v };
-  });
-  if(!ult || ult.f.slice(0, 7) < ipcDato.ym) return;      // más viejo que el que tengo: no me lo creo
-  var antes = ipcDato.ym + '|' + ipcDato.v;
-  ipcDato = { ym:ult.f.slice(0, 7), v:Math.round(ult.v * 100) / 100, dia:today() };
-  try{ localStorage.setItem(IPC_KEY, JSON.stringify(ipcDato)); }catch(e){}
-  if(antes !== ipcDato.ym + '|' + ipcDato.v && vista === 'cyc'){ cycPrepararInf(); cycCalcular(); }
-};
-function traerIpc(){
-  if(ipcDato.dia === today()) return;
-  try{
-    fetch(IPC_URL, {cache:'no-store'})
-      .then(function(r){ return r.ok ? r.text() : ''; })
-      .then(function(t){ if(t) window.__ipcListo(t); })
-      .catch(function(){});
-  }catch(e){}
-}
 function primerHabil(ym){
   var y = parseInt(ym.slice(0,4),10), m = parseInt(ym.slice(5,7),10);
   for(var d = 1; d <= 12; d++) if(esHabil(y, m, d)) return d;
@@ -189,12 +152,10 @@ function ultimoHabil(ym){
 }
 /* El sueldo que entra el ÚLTIMO día hábil del mes es, en realidad, el del mes
    siguiente: te lo pagan por adelantado, para que arranques el mes con la plata.
-   Por eso se cuenta ahí (en los totales, en la lista y en el aguinaldo), pero la
-   FECHA no se toca: la plata entró ese día, y los saldos por medio, los
-   intereses y el calendario siguen yendo por la fecha real.
-   Vale para los movimientos de categoría Sueldo (menos el aguinaldo y las horas
-   extras, que no son el sueldo del mes) y para un ingreso fijo de categoría
-   Sueldo que cobrás "el último día hábil". */
+   Por eso se cuenta ahí (en los totales y en la lista), pero la FECHA no se
+   toca: la plata entró ese día, y los saldos por medio y el calendario siguen
+   yendo por la fecha real. Vale para los movimientos de categoría Sueldo y para
+   un ingreso fijo de categoría Sueldo que cobrás "el último día hábil". */
 function esUltimoHabilFecha(fecha){
   var s = String(fecha || '');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
@@ -202,7 +163,7 @@ function esUltimoHabilFecha(fecha){
 }
 function mesDeTx(t){
   var ym = ymOf(t.fecha);
-  if(t.tipo === 'ingreso' && t.cat === 'Sueldo' && !t.sac && !t.hx && esUltimoHabilFecha(t.fecha)) return ymAdd(ym, 1);
+  if(t.tipo === 'ingreso' && t.cat === 'Sueldo' && esUltimoHabilFecha(t.fecha)) return ymAdd(ym, 1);
   return ym;
 }
 function esSueldoAdelantado(f){
@@ -238,7 +199,7 @@ function diaFijo(f, ym){
   return Math.min(Number(f.dia)||1, finDeMes(ym));
 }
 // sólo los gastos llevan hora; un ingreso entra en el día
-function horaFijo(f){ return (f && (f.tipo || 'gasto') === 'gasto') ? vjHoraOk(f.hora) : ''; }
+function horaFijo(f){ return (f && (f.tipo || 'gasto') === 'gasto') ? horaOk(f.hora) : ''; }
 function diaFijoTexto(f){
   if(f.dia === 'primerHabil') return 'todos los meses el primer día hábil';
   if(f.dia === 'ultimoHabil') return 'todos los meses el último día hábil';
@@ -267,14 +228,6 @@ function montoFijoPesos(f, ym){
   var t = tramoFijo(f, ym);
   if(!t) return 0;
   return montoPesos({ monto:t.monto, mon:f.mon, cot:t.cot });
-}
-/* La fecha de un fijo en un mes es su día de siempre, salvo que lo hayas pagado
-   antes: ahí cuenta el día en que lo tachaste (`f.adel[ym]`). Como todo lo demás
-   —los totales, Movimientos, el calendario, los saldos por medio y los
-   intereses— sale de esta fecha, alcanza con cambiarla acá. */
-function fechaFijo(f, ym){
-  var l = ocurrenciasFijo(f, ym);
-  return l.length ? l[0].fecha : ym + '-' + pad(diaFijo(f, ym));
 }
 /* v204: "lo tacho yo". Desde el mes `f.man`, el fijo no se suma solo el día que
    vence: queda esperando en Pagos del mes hasta que lo tachás. Los meses de
@@ -315,7 +268,7 @@ function montoFijoMes(f, ym){
 /* v226: lo que un fijo vale por mes, más allá del día en que cae la plata. Uno
    por quincena son dos quincenas por mes, aunque el primer mes sólo se cobre la
    1.ª (la 2.ª cae al mes siguiente). Es lo que va en "Entra por mes" y "Al año",
-   y lo que cuenta como sueldo del mes (aguinaldo, horas extras, reparto). */
+   y lo que cuenta como sueldo del mes para el reparto del grupo. */
 function valorFijoMes(f, ym){
   if(esQuincena(f)) return fijoVigente(f, ym) ? 2 * montoFijoPesos(f, ym) : 0;
   return montoFijoMes(f, ym);
@@ -327,8 +280,7 @@ function yaLlegoFijo(fecha, hora){
 }
 /* Pagos adelantados: { 'YYYY-MM': 'YYYY-MM-DD' }, el día en que lo tachaste a
    mano; en los de quincena la clave es la quincena ('YYYY-MM-q1' o '-q2'), que
-   se puede cobrar en ese mes o en el siguiente. Va dentro del fijo, así viaja
-   con él a los otros dispositivos. */
+   se puede cobrar en ese mes o en el siguiente. Va dentro del fijo. */
 function adelLimpio(o){
   if(!o || typeof o !== 'object' || Array.isArray(o)) return undefined;
   var out = {}, n = 0;
@@ -358,21 +310,13 @@ function ponerAdelanto(f, ym, fecha){
    cuotas por igual. */
 function todaviaNoLlego(fecha, ym){ return ym === ymNow() && fecha > today(); }
 /* La lista de pagos del mes: cada fijo guarda en qué meses lo tachaste. Va
-   dentro del propio fijo para que viaje con él a los otros dispositivos y se
-   vaya si lo borrás. Tacharlo antes de su día lo cuenta ya en el mes. */
+   dentro del propio fijo, así se va si lo borrás. Tacharlo antes de su día lo cuenta ya en el mes. */
 function pagLimpio(l){
   if(!Array.isArray(l)) return undefined;
   var out = [];
   l.forEach(function(x){ x = String(x||''); if(/^\d{4}-\d{2}$/.test(x) && out.indexOf(x) < 0) out.push(x); });
   out.sort();
   return out.length ? out.slice(-60) : undefined;
-}
-function fijoPago(f, ym){ return !!(f && Array.isArray(f.pag) && f.pag.indexOf(ym) > -1); }
-function marcarPago(f, ym, si){
-  var l = (Array.isArray(f.pag) ? f.pag : []).filter(function(x){ return x !== ym; });
-  if(si) l.push(ym);
-  l = pagLimpio(l);
-  if(l) f.pag = l; else delete f.pag;
 }
 /* `real`: por la fecha en que cae cada uno (el calendario y el detalle del día).
    Sin `real`: por el mes al que cuenta, que sólo difiere para el sueldo que se
@@ -412,12 +356,6 @@ function masNuevoPrimero(a, b){
   if(a.f !== b.f) return a.f < b.f ? 1 : -1;
   return b.r - a.r;
 }
-// lo ahorrado en la moneda de la meta
-/* Lo que rinde una meta que está guardada en la cuenta remunerada. La plata no
-   salió del banco: sigue generando interés, y ese interés se suma a la misma
-   meta (así funciona, por ejemplo, la sección de ahorros de Mercado Pago).
-   Arranca el día que creaste la meta, con lo que ya tenías puesto, y cada
-   aporte empieza a rendir desde su fecha. */
 /* El punto de partida son dos montos: los pesos y los dólares que ya tenías.
    Es un stock —plata que seguís teniendo—, así que para pasarlo a la moneda del
    objetivo se usa el dólar de hoy, en cualquiera de las dos direcciones. */
@@ -436,110 +374,6 @@ function usdDeMeta(m){
   (m.aportes||[]).forEach(function(a){ if(monAporte(m, a) === 'USD') t += (Number(a.monto)||0); });
   return t;
 }
-/* Y cuántos PESOS hay: el punto de partida en pesos más los aportes cargados en
-   pesos. Es la plata que sí rinde, así que la tarjeta la nombra aparte. */
-/* ---- lo que ya tenías, repartido ----
-   Lo que ya tenías en pesos puede estar en más de un lugar: una parte en
-   efectivo, otra en Mercado Pago. El primer lugar es el de siempre (`m.inicial`,
-   con `m.rinde`/`m.cuenta`); cada lugar más es una "parte": un aporte marcado
-   `previo` + `parte`, con la fecha de la meta. Por ser `previo` ya se comporta
-   como tiene que comportarse —rinde desde esa fecha en su cuenta, no toca el
-   balance de ningún mes ni le descuenta a la cuenta— y por ser `parte` se
-   muestra acá arriba y no en la lista de aportes. */
-function partesDe(m){ return (m && m.aportes || []).filter(function(a){ return a && a.parte; }); }
-function sumaPartes(m){ return partesDe(m).reduce(function(t, a){ return t + (Number(a.monto)||0); }, 0); }
-function iniTotalArs(m){ return iniArs(m) + sumaPartes(m); }
-/* Cambia el total de pesos que ya tenías. Lo que se mueve es el primer lugar;
-   si el total nuevo no alcanza ni para las partes, se achican desde la última. */
-function ponerTotalIni(m, total){
-  total = Math.max(0, Number(total)||0);
-  var sp = sumaPartes(m);
-  if(total >= sp){ m.inicial = total - sp; return; }
-  m.inicial = 0;
-  var sobra = sp - total, ps = partesDe(m);
-  for(var i = ps.length - 1; i >= 0 && sobra > 0.0001; i--){
-    var v = Number(ps[i].monto)||0, saco = Math.min(v, sobra);
-    ps[i].monto = Math.round((v - saco) * 100) / 100;
-    sobra -= saco;
-  }
-  m.aportes = (m.aportes||[]).filter(function(a){ return !(a.parte && !((Number(a.monto)||0) > 0)); });
-}
-function arsDeMeta(m){
-  var t = iniArs(m);
-  (m.aportes||[]).forEach(function(a){ if(monAporte(m, a) !== 'USD') t += (Number(a.monto)||0); });
-  return t;
-}
-/* ---- dónde está cada peso de una meta ----
-   Una meta puede tener plata en varios lugares a la vez: una parte en Mercado
-   Pago, otra en Lemon y otra en efectivo en un cajón. Cada aporte guarda el suyo,
-   y el punto de partida ("ya tenías ahorrado") el de la meta (`m.rinde` y
-   `m.cuenta`, que se llaman así por compatibilidad con los datos de antes).
-   El lugar es el id de una cuenta, o '' si la plata está guardada aparte y no
-   rinde. Los dólares nunca rinden: la TNA que paga el banco es en pesos. */
-function cuentaPorDefecto(){ return cuentasQueRinden()[0] || null; }
-function lugarValido(id){ var c = id ? cuentaPorId(id) : null; return (c && c.medio) ? c.id : ''; }
-function lugarPorDefecto(){ var c = cuentaPorDefecto(); return c ? c.id : ''; }
-function lugarInicial(m){
-  if(!m || m.rinde !== true) return '';
-  return lugarValido(m.cuenta) || lugarPorDefecto();
-}
-function lugarAporte(m, a){
-  if(!a || monAporte(m, a) === 'USD') return '';
-  var r = (typeof a.rinde === 'boolean') ? a.rinde : (!!m && m.rinde === true);
-  if(!r) return '';
-  return lugarValido(a.cuenta) || lugarPorDefecto();
-}
-function nombreLugar(id){ var c = id ? cuentaPorId(id) : null; return c ? c.medio : ''; }
-function hayDondeRendir(){ return cuentas().some(function(c){ return !!c.medio; }); }
-
-/* El interés de la meta. Cada lugar simula su propio saldo con SU tasa: lo de
-   Lemon rinde a la tasa de Lemon y lo de Mercado Pago a la de Mercado Pago. Cada
-   peso empieza a rendir el día que dice su fecha —si cargás hoy algo que pusiste
-   hace tres días, esos tres días ya rindieron—, con la tasa de hoy: la de los
-   días pasados no la tengo, y de un día para el otro casi no cambia.
-   Devuelve { total, por:{cuenta: interés}, base:{lugar: capital} }; en `base`, la
-   clave '' es la plata guardada aparte. */
-var _mintCache = null;
-function interesMetaDet(m){
-  if(!m) return { total:0, por:{}, base:{} };
-  if(!_mintCache) _mintCache = {};
-  if(_mintCache[m.id]) return _mintCache[m.id];
-  var hoy = today(), tope = sumarDias(hoy, -1500);
-  var grupos = {}, base = {};
-  function poner(lugar, f, v){
-    if(!v) return;
-    base[lugar] = (base[lugar] || 0) + v;
-    if(!lugar || !f || f > hoy) return;          // aparte no rinde; lo futuro, todavía no
-    if(f < tope) f = tope;
-    var g = grupos[lugar] || (grupos[lugar] = { mov:{}, desde:f });
-    g.mov[f] = (g.mov[f] || 0) + v;
-    if(f < g.desde) g.desde = f;
-  }
-  if(iniArs(m) > 0) poner(lugarInicial(m), (m.desde && m.desde <= hoy) ? m.desde : hoy, iniArs(m));
-  (m.aportes||[]).forEach(function(a){
-    if(monAporte(m, a) === 'USD') return;         // los dólares no rinden la tasa en pesos
-    poner(lugarAporte(m, a), a.fecha, Number(a.monto) || 0);
-  });
-  var out = { total:0, por:{}, base:base };
-  Object.keys(grupos).forEach(function(cid){
-    var tna = tnaDe(cuentaPorId(cid));
-    if(tna <= 0) return;
-    var diaria = tna / 100 / 365, g = grupos[cid];
-    var saldo = 0, tot = 0, f = g.desde, vueltas = 0;
-    while(f <= hoy && vueltas++ < 2000){
-      saldo += g.mov[f] || 0;
-      if(saldo > 0){ var x = saldo * diaria; tot += x; saldo += x; }
-      f = sumarDias(f, 1);
-    }
-    out.por[cid] = tot;
-    out.total += tot;
-  });
-  _mintCache[m.id] = out;
-  return out;
-}
-function interesMetaArs(m){ return interesMetaDet(m).total; }
-// el mismo interés, visto en la moneda en la que está escrito el objetivo
-function interesMeta(m){ return aMonedaMeta(m, interesMetaArs(m), 0); }
 /* Un aporte se guarda en la moneda en la que lo cargaste (`a.mon`), no en la de
    la meta: podés meterle dólares a una meta en pesos y al revés. Sin `a.mon`
    (datos anteriores) vale la moneda de la meta, que es como venía.
@@ -572,7 +406,7 @@ function aportePesos(m, a){
 }
 function ahorradoEn(m){
   var s = (m.aportes||[]).reduce(function(a,b){ return a + aporteEnMeta(m, b); }, 0);
-  return s + inicialEnMeta(m) + interesMeta(m);
+  return s + inicialEnMeta(m);
 }
 // lo mismo, pasado a pesos (los aportes en dólares guardan la cotización del día)
 /* Todo lo que está en dólares se pasa a pesos al dólar de hoy, así el total
@@ -612,7 +446,7 @@ function aportesDe(ym){
    algo de agosto, lo que arrastró septiembre se actualiza solo, y la cadena
    sigue para atrás todo lo que haga falta. */
 var _arrCache = null, _arrProf = 0;
-function arrOlvidar(){ _arrCache = null; _intCache = null; _mintCache = null; _repCache = null; }
+function arrOlvidar(){ _arrCache = null; _repCache = null; }
 function llevaArrastre(ym){
   if(S.arrastreModo === 'siempre') return true;
   if(S.arrastreModo === 'nunca') return false;

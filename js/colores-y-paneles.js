@@ -15,6 +15,7 @@ var colorNuevo = null;         // el color elegido para el grupo que todavía no
 var rueda = null;              // {h,s,l} mientras la rueda está abierta
 
 var TILDE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
+var LAPIZ_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>';
 
 function colorDe(id){
   if(id === '@nuevo') return colorNuevo || colorLibre();
@@ -354,12 +355,6 @@ function moverPanel(panel, paso){
 }
 
 var arr = null, autoScroll = null;
-function panelesHermanos(){
-  var cont = $('#panels');
-  return Array.prototype.filter.call(cont.children, function(c){
-    return c !== arr.panel && c !== arr.ph && (c.hasAttribute('data-panel') || c === arr.ph);
-  });
-}
 function reubicar(x, y){
   var cont = $('#panels');
   var hijos = Array.prototype.filter.call(cont.children, function(c){

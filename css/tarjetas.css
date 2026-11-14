@@ -23,8 +23,7 @@ body.arrastrando .grip{cursor:grabbing}
 .grip:hover{color:var(--ink-2);background:var(--surface-2)}
 .grip svg{width:15px;height:15px;display:block}
 .g4{grid-template-columns:repeat(2,1fr)}
-.g2{grid-template-columns:1fr}
-@media (min-width:760px){ .g4{grid-template-columns:repeat(4,1fr)} .g2{grid-template-columns:1fr 1fr} }
+@media (min-width:760px){ .g4{grid-template-columns:repeat(4,1fr)} }
 
 /* `hidden` tiene que ganarle a cualquier `display` que ponga yo. En el visor de
    artifacts esto viene de arriba, pero en el APK la página está sola. */

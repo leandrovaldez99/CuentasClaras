@@ -36,12 +36,10 @@ var DB_LISTAS = [
     campos:[['id','id','txt'], ['nombre','nombre','txt',''], ['dia','dia_cuotas','chico']] },
   { tabla:'grupos_categorias', de:'grupos', sinExtra:true, orden:'indice',
     campos:[['id','id','txt'], ['nombre','nombre','txt',''], ['color','color','txt']] },
-  { tabla:'cuentas_rinden', de:'cuentas', orden:'indice',
-    campos:[['id','id','txt'], ['entidad','entidad','txt'], ['tna','tna','num'], ['manual','manual','bool'], ['medio','medio_id','ref','medios_pago']] },
   { tabla:'movimientos', de:'tx', orden:'registro',
     campos:[['id','id','txt'], ['tipo','tipo','tipo','gasto'], ['monto','monto','num',0], ['mon','moneda','txt'], ['cot','cotizacion','num'],
             ['fecha','fecha','fecha'], ['cat','categoria','cat'], ['medio','medio_id','ref','medios_pago'], ['nota','nota','txt'],
-            ['quien','persona_id','ref','personas'], ['por','cargado_por','txt'], ['med','a_medias','json'], ['viaje','viaje_id','txt']] },
+            ['quien','persona_id','ref','personas'], ['por','cargado_por','txt'], ['med','a_medias','json']] },
   { tabla:'compras_cuotas', de:'planes', orden:'registro', fijo:{ tipo:'gasto' },
     campos:[['id','id','txt'], ['desc','descripcion','txt'], ['total','total','num',0], ['n','cuotas','ent',1], ['dia','dia','chico'],
             ['desde','primer_mes','txt'], ['cat','categoria','cat'], ['medio','medio_id','ref','medios_pago'],
@@ -56,32 +54,20 @@ var DB_LISTAS = [
     campos:[['id','id','txt'], ['fecha','fecha','fecha'], ['monto','monto','num',0], ['de','medio_origen','ref','medios_pago'],
             ['a','medio_destino','ref','medios_pago'], ['nota','nota','txt'], ['quien','persona_id','ref','personas']] },
   { tabla:'metas_ahorro', de:'metas', orden:'indice',
-    campos:[['id','id','txt'], ['nombre','nombre','txt',''], ['objetivo','objetivo','num'], ['moneda','moneda','txt'], ['desde','desde','fecha'],
-            ['cuenta','cuenta_id','ref','cuentas_rinden']],
+    campos:[['id','id','txt'], ['nombre','nombre','txt',''], ['objetivo','objetivo','num'], ['moneda','moneda','txt'], ['desde','desde','fecha']],
     hijos:[{ tabla:'aportes', de:'aportes', padre:'meta_id', orden:'registro',
              campos:[['id','id','txt'], ['monto','monto','num',0], ['fecha','fecha','fecha'], ['mon','moneda','txt'], ['cot','cotizacion','num'],
-                     ['cuenta','cuenta_id','ref','cuentas_rinden'], ['quien','persona_id','ref','personas']] }] },
-  { tabla:'horas_extras', de:'hx', orden:'registro',
-    campos:[['id','id','txt'], ['fecha','fecha','fecha'], ['h','horas','num',0], ['pct','recargo','num'], ['quien','persona_id','ref','personas']] },
-  { tabla:'viajes', de:'viajes', orden:'indice', locales:['sync', 'vis'],   // (cuándo se publicó y qué vio: es de cada navegador)
-    campos:[['id','id','txt'], ['nombre','nombre','txt',''], ['clave','clave','txt'], ['creado','creado_el','ms']],
-    hijos:[{ tabla:'viaje_miembros', de:'miembros', padre:'viaje_id', orden:'indice', campoId:'i',
-             campos:[['i','id','txt'], ['n','nombre','txt','']] },
-           { tabla:'viaje_gastos', de:'gastos', padre:'viaje_id', orden:'indice', campoId:'i',
-             campos:[['i','id','txt'], ['pag','pagado_por','refLocal','miembros'], ['mo','monto','num',0], ['d','descripcion','txt'],
-                     ['c','categoria','txt'], ['f','fecha','fecha']] }] }
+                     ['quien','persona_id','ref','personas']] }] }
 ];
 // de las que dependen otras, primero: así se suben en un orden que respeta las relaciones
-var DB_ORDEN = ['personas', 'medios_pago', 'grupos_categorias', 'categorias', 'cuentas_rinden', 'movimientos', 'compras_cuotas',
-                'gastos_fijos', 'precios_fijo', 'pases', 'metas_ahorro', 'aportes', 'horas_extras', 'viajes', 'viaje_miembros',
-                'viaje_gastos', 'ajustes'];
+var DB_ORDEN = ['personas', 'medios_pago', 'grupos_categorias', 'categorias', 'movimientos', 'compras_cuotas',
+                'gastos_fijos', 'precios_fijo', 'pases', 'metas_ahorro', 'aportes', 'ajustes'];
 // las columnas de la clave de cada tabla, además de espacio_id
-var DB_CLAVES = { categorias:['tipo', 'nombre'], precios_fijo:['fijo_id', 'orden'], aportes:['meta_id', 'id'],
-                  viaje_miembros:['viaje_id', 'id'], viaje_gastos:['viaje_id', 'id'], ajustes:[] };
+var DB_CLAVES = { categorias:['tipo', 'nombre'], precios_fijo:['fijo_id', 'orden'], aportes:['meta_id', 'id'], ajustes:[] };
 DB_ORDEN.forEach(function(t){ if(!DB_CLAVES[t]) DB_CLAVES[t] = ['id']; });
-// lo que la capa de datos reparte en tablas, y lo que es de cada dispositivo y no se sube
-var DB_EN_TABLAS = ['medios', 'catGasto', 'catIng', 'grupoDe', 'grupos', 'personas', 'tx', 'planes', 'fijos', 'pases', 'cuentas', 'metas', 'hx', 'viajes'];
-var DB_LOCALES = ['tasas', 'tasa', 'dolar', 'sy', 'nsk', 'updatedAt', 'dbMarca'];
+// lo que la capa de datos reparte en tablas, y lo que es de este navegador y no se sube
+var DB_EN_TABLAS = ['medios', 'catGasto', 'catIng', 'grupoDe', 'grupos', 'personas', 'tx', 'planes', 'fijos', 'pases', 'metas'];
+var DB_LOCALES = ['updatedAt', 'dbMarca'];
 
 /* ---- tipos de columna: cuándo un dato es válido y cómo se convierte ---- */
 function dbFechaOk(v){
@@ -135,17 +121,16 @@ function dbFila(sp, item, i, padre, ctx){
   if(sp.fijo) Object.keys(sp.fijo).forEach(function(k){ f[k] = sp.fijo[k]; });
   if(sp.porIndice) f.orden = i;
   else {
-    var id = item[sp.campoId || 'id'];
+    var id = item.id;
     if(typeof id !== 'string' || !id) return null;
   }
   sp.campos.forEach(function(c){
     var campo = c[0], col = c[1], tipo = c[2], v = item[campo];
-    var esRef = (tipo === 'ref' || tipo === 'refLocal'), T = DB_TIPO[tipo];
+    var esRef = (tipo === 'ref'), T = DB_TIPO[tipo];
     var falta = (!esRef && c.length > 3) ? c[3] : (T && T.falta !== undefined ? T.falta : null);
     usados[campo] = 1;
     if(v === undefined){ f[col] = falta; return; }
     var ok = tipo === 'ref' ? (typeof v === 'string' && !!ctx.ids[c[3]][v])
-           : tipo === 'refLocal' ? (typeof v === 'string' && !!(ctx.local[c[3]] || {})[v])
            : T.ok(v);
     if(ok) f[col] = (T && T.a) ? T.a(v) : v;
     else { f[col] = falta; extra[campo] = v; }     // lo que no entra en la columna no se pierde: va en "extra"
@@ -153,7 +138,6 @@ function dbFila(sp, item, i, padre, ctx){
   });
   (sp.hijos || []).forEach(function(h){ usados[h.de] = 1; });
   if(!sp.sinExtra){
-    (sp.locales || []).forEach(function(k){ usados[k] = 1; });
     Object.keys(item).forEach(function(k){ if(!usados[k] && item[k] !== undefined) extra[k] = item[k]; });
     f.extra = extra;
   }
@@ -173,19 +157,16 @@ function dbFilasLista(sp, lista, padre, ctx, out){
     out[sp.tabla][k] = f;
     (sp.hijos || []).forEach(function(h){
       var p = {}; p[h.padre] = f.id;
-      var ctx2 = { ids:ctx.ids, cats:ctx.cats, local:{} };
-      // los gastos de un viaje sólo pueden apuntar a los miembros de ese viaje
-      if(Array.isArray(item.miembros)){ ctx2.local.miembros = {}; item.miembros.forEach(function(m){ if(m && typeof m.i === 'string') ctx2.local.miembros[m.i] = 1; }); }
-      dbFilasLista(h, item[h.de], p, ctx2, out);
+      dbFilasLista(h, item[h.de], p, ctx, out);
     });
   });
 }
 /* g: los datos como se guardan (lo que devuelve paraGuardar). → { tabla: { clave: fila } } */
 function dbFilas(g){
   var out = {}; DB_ORDEN.forEach(function(t){ out[t] = {}; });
-  var ctx = { ids:{ medios_pago:{}, personas:{}, cuentas_rinden:{}, grupos_categorias:{} }, cats:{}, local:{} };
+  var ctx = { ids:{ medios_pago:{}, personas:{}, grupos_categorias:{} }, cats:{} };
   function anotar(lista, tabla){ (Array.isArray(lista) ? lista : []).forEach(function(x){ if(x && typeof x.id === 'string' && x.id) ctx.ids[tabla][x.id] = 1; }); }
-  anotar(g.medios, 'medios_pago'); anotar(g.personas, 'personas'); anotar(g.cuentas, 'cuentas_rinden'); anotar(g.grupos, 'grupos_categorias');
+  anotar(g.medios, 'medios_pago'); anotar(g.personas, 'personas'); anotar(g.grupos, 'grupos_categorias');
   DB_LISTAS.forEach(function(sp){ dbFilasLista(sp, g[sp.de], {}, ctx, out); });
 
   // categorías: las de las listas, y las que ya no están pero algún movimiento todavía nombra
@@ -277,9 +258,7 @@ function dbLeerCache(){
 function dbOlvidarLocal(){
   dbUlt = {}; dbOrd = {}; dbEst.listo = false; dbEst.pendiente = false; dbEst.error = '';
   try{ localStorage.removeItem(DB_LS_CACHE); localStorage.removeItem(LS); }catch(e){}
-  var loc = {}; ['tasas', 'tasa', 'dolar', 'nsk'].forEach(function(k){ if(S[k] !== undefined) loc[k] = S[k]; });
   S = emptyState();
-  Object.keys(loc).forEach(function(k){ S[k] = loc[k]; });    // tasas y dólar ya bajados: son de este navegador, no de la cuenta
 }
 
 /* ---- leer ---- */
@@ -341,7 +320,7 @@ function dbTraer(){
     return dbLeerTodo();
   }).then(function(filas){
     // lo de acá se pasa a filas antes de tocar nada: así se compara con lo que se sabía de la base
-    var hayBase = Object.keys(dbUlt).length > 0, L = hayBase ? dbFilas(paraGuardar(sinSy())) : null;
+    var hayBase = Object.keys(dbUlt).length > 0, L = hayBase ? dbFilas(paraGuardar(S)) : null;
     DB_LISTAS.forEach(function reg(sp){
       if(sp.orden === 'registro'){ dbOrd[sp.tabla] = {}; (filas[sp.tabla] || []).forEach(function(f){ dbOrd[sp.tabla][dbClave(sp.tabla, f)] = Number(f.orden) || 0; }); }
       (sp.hijos || []).forEach(reg);
@@ -365,19 +344,13 @@ function dbTraer(){
       });
       if(cambioLocal) g = dbDesdeFilas(dbEnListas(M));
     }
-    DB_LOCALES.forEach(function(k){ if(k !== 'sy' && S[k] !== undefined) g[k] = S[k]; });
-    // lo que cada lista tiene de este navegador y no va a la base, se conserva
-    DB_LISTAS.forEach(function(sp){
-      if(!sp.locales || !Array.isArray(g[sp.de])) return;
-      var mios = {}; (S[sp.de] || []).forEach(function(x){ if(x && x.id) mios[x.id] = x; });
-      g[sp.de].forEach(function(x){ var m = mios[x.id]; if(m) sp.locales.forEach(function(k){ if(m[k] !== undefined) x[k] = m[k]; }); });
-    });
-    var antes = dbCanon(paraGuardar(sinSy())), primera = !dbEst.listo;
+    DB_LOCALES.forEach(function(k){ if(S[k] !== undefined) g[k] = S[k]; });
+    var antes = dbCanon(paraGuardar(S)), primera = !dbEst.listo;
     S = normalize(g);
     if(!S.dbMarca) S.dbMarca = uid();
     dbUlt = hR; dbEst.listo = true; dbEst.error = '';
     writeLocal(); dbGuardarCache();
-    if(primera || antes !== dbCanon(paraGuardar(sinSy()))){ fillSelects(); render(); aplicarOrden(); }
+    if(primera || antes !== dbCanon(paraGuardar(S))){ fillSelects(); render(); aplicarOrden(); }
     if(vista === 'familia') renderFamilia();
     cuentaPintarAjustes();
     dbEmpujar();                                       // si acá había algo sin subir (o es una cuenta nueva), va ahora
@@ -433,7 +406,7 @@ function dbEmpujar(){
   if(dbEst.subiendo){ dbEst.otra = true; return dbEst.pSubir; }
   // mientras se está leyendo la base no se sube: se espera a que termine y ahí va
   if(dbEst.trayendo && dbEst.pTraer){ dbEst.pendiente = true; return dbEst.pTraer.then(function(){}, function(){}).then(dbEmpujar); }
-  var esp = dbSes.espacio, nuevo = dbFilas(paraGuardar(sinSy())), pasos = [];
+  var esp = dbSes.espacio, nuevo = dbFilas(paraGuardar(S)), pasos = [];
   DB_ORDEN.forEach(function(t){
     var ult = dbUlt[t] || {}, ups = [], hs = {};
     Object.keys(nuevo[t]).forEach(function(k){ var h = dbHuella(nuevo[t][k]); if(ult[k] !== h){ ups.push(nuevo[t][k]); hs[k] = h; } });
@@ -495,8 +468,8 @@ function dbAvisar(){ if(dbSes.canal) try{ dbSes.canal.send({ type:'broadcast', e
 function dbEstadoTxt(){
   if(!dbActiva()) return ['', ''];
   if(dbEst.error && dbEst.pendiente) return ['mal', 'Sin conexión con la base: lo que cargues queda en este navegador y se sube cuando vuelva'];
-  if(dbEst.subiendo || dbEst.pendiente) return ['', 'Guardando en la base…'];
-  if(dbEst.trayendo && !dbEst.listo) return ['', 'Trayendo tus datos…'];
+  if(dbEst.subiendo || dbEst.pendiente) return ['busca', 'Guardando en la base…'];
+  if(dbEst.trayendo && !dbEst.listo) return ['busca', 'Trayendo tus datos…'];
   if(!dbEst.listo) return ['mal', 'No pude leer la base: estás viendo lo que quedó en este navegador'];
   return ['ok', 'Todo guardado en la base'];
 }
@@ -504,7 +477,7 @@ function dbPintarEstado(){
   var e = dbEstadoTxt();
   ['#cuentaEstado', '#fmAuto'].forEach(function(sel){
     var el = $(sel); if(!el) return;
-    el.className = 'vj-auto ' + e[0];
+    el.className = 'estado-base ' + e[0];
     var s = el.querySelector('span'); if(s) s.textContent = e[1];
   });
 }

@@ -22,7 +22,7 @@ function renderResumen(){
   if(sw) sw.setAttribute('aria-checked', verEnPesos ? 'true' : 'false');
   if(tu) tu.hidden = !(hayUsd && !verEnPesos);
 
-  var soloEnUsd = hayUsd && !verEnPesos && Math.round(soloPesos + r.int) === 0;
+  var soloEnUsd = hayUsd && !verEnPesos && Math.round(soloPesos) === 0;
   var nums = $('#tIngNums');
   if(nums) nums.classList.toggle('dual', hayUsd && !verEnPesos && !soloEnUsd);
 
@@ -30,19 +30,16 @@ function renderResumen(){
     // el mes fue todo en dólares: mostrar "$ 0" arriba sería esconder el dato
     $('#tIng').textContent = usd(r.ingUsd);
     if(tu) tu.hidden = true;
-    $('#tIngM').textContent = 'Todo en dólares · son ' + money(enPesosUsd)
-      + (r.int ? ' · más ' + money(r.int) + ' de intereses' : '');
+    $('#tIngM').textContent = 'Todo en dólares · son ' + money(enPesosUsd);
   } else if(hayUsd && !verEnPesos){
-    $('#tIng').textContent = money(soloPesos + r.int);
+    $('#tIng').textContent = money(soloPesos);
     if(tu) tu.textContent = usd(r.ingUsd);
-    $('#tIngM').textContent = 'En pesos y en dólares, por separado'
-      + (r.int ? ' · incluye ' + money(r.int) + ' de intereses' : '');
+    $('#tIngM').textContent = 'En pesos y en dólares, por separado';
   } else {
-    $('#tIng').textContent = money(r.ing + r.int);
+    $('#tIng').textContent = money(r.ing);
     $('#tIngM').textContent = hayUsd
       ? (usd(r.ingUsd) + ' pasados a ' + money(enPesosUsd) + ', al dólar de cada movimiento')
-      : (r.int ? ('Incluye ' + money(r.int) + ' de intereses')
-               : (r.nTx ? deltaTxt(r.ing, prev.ing) : 'Sin movimientos todavía'));
+      : (r.nTx ? deltaTxt(r.ing, prev.ing) : 'Sin movimientos todavía');
   }
   /* Lo que todavía no llegó se avisa acá y no en el número: el tile dice lo que
      ya tenés, y abajo cuánto falta este mes. Cuando el subtítulo era la
@@ -140,10 +137,6 @@ function renderResumen(){
   fijosDe(mes).forEach(function(x){ if(!x.pend) ult.push({ f:x.fecha, r:-1, fijo:x }); });
   if(r.arr) ult.push({ f: mes+'-01', r:-2, arr:r.arr, ym:mes });
   (S.pases||[]).forEach(function(p, i){ if(esDeVista(p)) ult.push({ f:p.fecha, r:recencia(p, i), pase:p }); });
-  if(r.int){
-    var dias = interesesDias(mes);
-    ult.push({ f: dias.length ? dias[dias.length-1].fecha : mes+'-01', r:-1, itr:r.int, ym:mes });
-  }
   ult.sort(masNuevoPrimero);
   ult = ult.slice(0,6);
   var filaPend = rowPendResumen();
@@ -152,7 +145,6 @@ function renderResumen(){
         if(x.tx) return rowTx(x.tx,false);
         if(x.pase) return rowPase(x.pase, false);
         if(x.arr !== undefined) return rowArrastre(x.ym, x.arr, false);
-        if(x.itr !== undefined) return rowInteresMes(x.ym, x.itr);
         if(x.fijo) return rowFijo(x.fijo.fijo, x.fijo.monto, x.fijo.fecha, x.fijo.propio, x.fijo.pend, false, x.fijo);
         return rowAporte(x.ap, x.meta);
       }).join('')
@@ -265,35 +257,6 @@ function rowArrastre(ym, monto, conBoton){
         : '<span class="amt neu">'+esc(txt)+'</span>')
     + '</div>';
 }
-/* Una fila por día de interés. El nombre de la entidad va abajo para que se
-   entienda de dónde sale la tasa. */
-function nombreEntidad(c){
-  if(!c) return 'tu cuenta';
-  if(c.manual) return 'TNA ' + fmtPct(tnaDe(c));
-  var ent = null;
-  (S.tasas||[]).forEach(function(x){ if(x.api === c.entidad) ent = x; });
-  return ent ? ent.n : 'tu cuenta';
-}
-function rowInteres(f, monto, cuenta, conColor){
-  var de = cuenta || nombreEntidad(cuentasQueRinden()[0]);
-  return '<div class="row">'
-    + marcaFila('tasa', '', conColor)
-    + '<span class="t"><b>Intereses</b>'
-    + '<small>'+esc(fechaLabel(f))+' · '+esc(de)+'</small></span>'
-    + '<span class="amt in">+ '+esc(money(monto))+'</span></div>';
-}
-/* En el Resumen no tiene sentido llenar "Últimos movimientos" con treinta filas
-   de intereses: ahí va una sola con el total del mes. */
-function rowInteresMes(ym, monto){
-  var porCta = interesesPorCuenta(ym);
-  var det = porCta.length > 1
-    ? porCta.map(function(x){ return x.cuenta.medio + ' ' + money(x.monto); }).join(' · ')
-    : 'Lo que rindió tu plata en el mes';
-  return '<div class="row"><span class="mark tasa">'+iconFor('tasa')+'</span>'
-    + '<span class="t"><b>Intereses de '+esc(ymLabel(ym, true))+'</b>'
-    + '<small>'+esc(det)+'</small></span>'
-    + '<span class="amt in">+ '+esc(money(monto))+'</span></div>';
-}
 /* Cuando el mes NO está arrastrando pero podría, ofrecerlo acá mismo. */
 function rowOferta(ym){
   var prev = ymAdd(ym, -1), v = resumen(prev).bal;
@@ -303,95 +266,12 @@ function rowOferta(ym){
     + '<span class="acts"><button class="btn ghost sm" type="button" data-arr="si" data-ym="'+esc(ym)+'">Pasarlo</button></span>'
     + '</div>';
 }
-/* Las opciones del "dónde está": guardada aparte, o cualquiera de tus cuentas.
-   Las que todavía no tienen tasa también aparecen —la plata puede estar ahí
-   igual—, avisando que así no rinde. */
-function opcionesLugar(sel){
-  var html = '<option value=""' + (sel ? '' : ' selected') + '>Aparte · no rinde</option>';
-  cuentas().forEach(function(c){
-    if(!c.medio) return;
-    var t = tnaDe(c);
-    html += '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>'
-      + esc(c.medio) + (t > 0 ? ' · rinde ' + esc(fmtPct(t)) : ' · sin tasa') + '</option>';
-  });
-  return html;
-}
-/* Adentro de cada meta: dónde está lo que ya tenías, y una línea que resume
-   dónde está todo y cuánto rindió. Antes era un solo botón "Sí, rinde" para la
-   meta entera; ahora cada aporte dice lo suyo y esto es el resumen. */
-function filaRinde(m){
-  var det = interesMetaDet(m), out = '';
-  var dol = usdDeMeta(m), pes = arsDeMeta(m);
-  if(iniTotalArs(m) > 0){
-    var li = lugarInicial(m), tna = li ? tnaDe(cuentaPorId(li)) : 0, ef = efectivoDe(m);
-    var otras = li ? otrasCuentasIni(m) : [];
-    var resto = li ? restoIni(m) : iniTotalArs(m);
-    var abierto = ef > 0 || !!efecAbierto[m.id];
-    var varias = cuentas().filter(function(c){ return !!c.medio; }).length > 1;
-    var txt;
-    if(!hayDondeRendir()) txt = 'Guardados aparte: no rinden.';
-    else if(!li) txt = 'No rinden: están guardados aparte.';
-    else if(!otras.length && !(ef > 0)){
-      txt = 'Rinden en ' + nombreLugar(li) + (tna > 0 ? ' al ' + fmtPct(tna) + ' anual' : ', que todavía no tiene tasa')
-        + ' desde el ' + fechaLarga(m.desde) + '.' + (varias ? ' Si una parte está en otra cuenta, tocala también.' : '');
-    } else {
-      var sinMonto = otras.filter(function(c){ return !(montoEn(m, c) > 0); }).map(nombreLugar);
-      if(sinMonto.length) txt = 'Poné cuánto hay en ' + listaY(sinMonto) + '; lo que queda sigue en ' + nombreLugar(li) + '.';
-      else {
-        var fr = [money(resto) + ' rinden en ' + nombreLugar(li)];
-        otras.forEach(function(c){ fr.push(money(montoEn(m, c)) + ' en ' + nombreLugar(c)); });
-        if(ef > 0) fr.push(money(ef) + ' están en efectivo');
-        txt = listaY(fr) + '. Cada parte rinde a la tasa de su cuenta.';
-      }
-    }
-    var X = X_SVG(), filas = '';
-    if(li && otras.length){
-      filas += '<div class="refec"><span class="lab">En ' + esc(nombreLugar(li)) + '</span>'
-        + '<span class="resto-v">' + esc(money(resto)) + '<small>lo que queda</small></span><span></span></div>';
-      otras.forEach(function(c){
-        var v = montoEn(m, c), k = esc(m.id) + '|' + esc(c), idc = 'ic-' + esc(m.id) + '-' + esc(c);
-        filas += '<div class="refec"><label class="lab" for="' + idc + '">En ' + esc(nombreLugar(c)) + '</label>'
-          + '<span class="pctin plata"><i>$</i><input class="money-in" id="' + idc + '" type="text" inputmode="decimal"'
-          + ' data-icta="' + k + '" value="' + (v > 0 ? esc(enCampo(v)) : '') + '" placeholder="0" autocomplete="off"></span>'
-          + '<button type="button" class="iconbtn" data-ctasacar="' + k + '" aria-label="Sacar ' + esc(nombreLugar(c)) + '" title="Sacar ' + esc(nombreLugar(c)) + '">' + X + '</button></div>';
-      });
-    }
-    out += '<div class="previo donde"><span class="k">Dónde están esos ' + esc(money(iniTotalArs(m)))
-      + '<small>' + esc(txt) + '</small></span>'
-      + ctlRinde('ini:' + m.id, li, { multi:true, otras:otras })
-      + (filas ? '<div class="rotras">' + filas + '</div>' : '')
-      + ((li && hayDondeRendir())
-          ? (abierto
-              ? '<div class="refec"><label class="lab" for="ief-' + esc(m.id) + '">En efectivo, sin rendir</label>'
-                + '<span class="pctin plata"><i>$</i><input class="money-in" id="ief-' + esc(m.id) + '" type="text" inputmode="decimal"'
-                + ' data-iefec="' + esc(m.id) + '" value="' + (ef > 0 ? esc(enCampo(ef)) : '') + '" placeholder="0" autocomplete="off"></span>'
-                + '<button type="button" class="iconbtn" data-efcerrar="' + esc(m.id) + '" aria-label="Sacar la parte en efectivo" title="Sacar la parte en efectivo">' + X + '</button></div>'
-              : '<button type="button" class="linkbtn" data-efabrir="' + esc(m.id) + '">+ Parte está en efectivo</button>')
-          : '')
-      + '</div>';
-  }
-  if(!(pes > 0.005) && !(dol > 0)) return out;
-  var enCta = [], frases = [];
-  Object.keys(det.base).forEach(function(k){
-    if(!k || !(det.base[k] > 0.005)) return;
-    var c = cuentaPorId(k), t = tnaDe(c);
-    enCta.push(money(det.base[k]) + ' en ' + (c ? c.medio : 'tu cuenta') + ' (' + (t > 0 ? fmtPct(t) : 'sin tasa') + ')');
-  });
-  if(enCta.length) frases.push('Tenés ' + listaY(enCta));
-  if((det.base[''] || 0) > 0.005) frases.push(money(det.base['']) + ' guardados aparte, sin rendir');
-  if(det.total > 0.005) frases.push('ya generaron ' + money(det.total) + ' acá adentro');
-  if(dol > 0) frases.push(usd(dol) + ' no rinden: la tasa es en pesos');
-  if(pes > 0.005 && !hayDondeRendir()) frases.push('para que rindan, cargá tu cuenta en Ajustes › Cuentas que rinden');
-  if(!frases.length) return out;
-  var t0 = frases.join(' · ');
-  return out + '<p class="note rinde-res">' + esc(t0.charAt(0).toUpperCase() + t0.slice(1)) + '.</p>';
-}
 /* Cuánto de lo que hay en la meta es plata que ya tenías y sumaste después
    (`previo`), para decirlo al lado del punto de partida. */
 function previosTexto(m){
   var ars = 0, us = 0;
   (m.aportes||[]).forEach(function(a){
-    if(!a.previo || a.parte) return;
+    if(!a.previo) return;
     if(monAporte(m, a) === 'USD') us += Number(a.monto)||0; else ars += Number(a.monto)||0;
   });
   var p = [];
