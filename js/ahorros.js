@@ -1,5 +1,5 @@
 /* Cuentas Claras · js/ahorros.js
-   Metas de ahorro, aportes y cuentas donde está la plata.
+   Metas de ahorro y aportes.
 
    Todos los archivos de js/ comparten el mismo espacio de nombres: se cargan en
    orden desde index.html y lo que define uno lo pueden usar los que siguen. */

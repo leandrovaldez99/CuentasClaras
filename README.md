@@ -46,16 +46,13 @@ js/                     El código, un archivo por tema
   cuenta.js               entrar, crear la cuenta y cerrar sesión
   arranque.js             lo último que corre: prepara todo y carga los datos
   lib/supabase.js         el cliente de Supabase (librería de terceros)
-sql/
-  esquema.sql             las tablas, las relaciones y los permisos de la base de datos
-  migracion-02-app-simple.sql   para pasar una base creada con la versión anterior
 ```
 
 Los archivos de `js/` se cargan en orden desde `index.html` y comparten el mismo espacio de nombres: lo que define uno lo pueden usar los que siguen.
 
 ## La base de datos
 
-Es PostgreSQL. Todo el esquema está en [`sql/esquema.sql`](sql/esquema.sql).
+Es PostgreSQL, en Supabase.
 
 **Usuarios y espacios.** El login lo resuelve Supabase Auth (tabla `auth.users`). Al crearse una cuenta, un disparador (`alta_usuario`) le arma su fila en `perfiles` y un `espacio` propio, que es donde viven sus datos. Un grupo familiar es un espacio con más de un miembro (`espacio_miembros`): todos leen y cargan en el mismo.
 
@@ -86,13 +83,9 @@ Las columnas guardan lo que hace falta para consultar y relacionar (montos, fech
 3. Si se corta internet, lo cargado queda en el navegador y se sube cuando vuelve.
 4. Cuando alguien del grupo cambia algo, los demás reciben un aviso (Supabase Realtime) y vuelven a leer.
 
-### Usar una base propia
+### Dónde se configura
 
-1. Crear un proyecto en Supabase.
-2. En el editor de SQL, pegar y correr `sql/esquema.sql`.
-3. Poner la dirección del proyecto y su clave pública (*publishable key*) en `js/configuracion.js`.
-
-Si `DB_URL` queda vacío en ese archivo, la app funciona sin cuentas y guarda sólo en el navegador.
+La dirección del proyecto de Supabase y su clave pública (*publishable key*) están en `js/configuracion.js`. Si `DB_URL` queda vacío en ese archivo, la app funciona sin cuentas y guarda sólo en el navegador.
 
 ## Probarla
 
